@@ -2,6 +2,8 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+// Fire and forget
+
 /*
  * parallel_fnf launches a new thread in "fire and forget" mode
  * (i.e. detached state) to run the provided function. The arg
@@ -15,4 +17,14 @@ int parallel_fnf(void (*fn) (void *), void *arg);
  * stack size can be specified.
 */
 int parallel_fnf_ssz(void (*fn) (void *), void *arg, size_t stack_sz);
+
+// locked value
+
+typedef struct parallel_locked_val_s parallel_locked_val_s;
+
+parallel_locked_val_s * parallel_locked_val_new(void *initial_val);
+void * parallel_locked_val_free(parallel_locked_val_s *lv);
+void * parallel_locked_val_set(parallel_locked_val_s *lv, void *new_val);
+void * parallel_locked_val_get(parallel_locked_val_s *lv);
+void * parallel_locked_val_with(parallel_locked_val_s *lv, void *(*fn) (void *));
 

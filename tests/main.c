@@ -10,6 +10,7 @@ int main(int argc, char **argv) {
   GREATEST_MAIN_BEGIN();
 
   RUN_SUITE(fnf);
+  RUN_SUITE(locked_val);
 
   GREATEST_MAIN_END();
 }

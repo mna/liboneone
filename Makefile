@@ -4,14 +4,21 @@ CFLAGS ?= -Wall -pedantic -Werror -g -std=c11
 LDLIBS ?=
 LDFLAGS ?=
 
+ifeq ($(msan),1)
+	CFLAGS += -fsanitize=memory -O1
+endif
+ifeq ($(tsan),1)
+	CFLAGS += -fsanitize=thread
+endif
+
 # build in child directory for easier cleanup
 BUILD_DIR := build
 
 # list of source files for the project
-PARALLEL_CFILES := src/parallel.c
-PARALLEL_HFILES := src/parallel.h
+PARALLEL_CFILES := src/fnf.c src/locked_val.c
+PARALLEL_HFILES := src/parallel.h src/_errors.h
 TEST_HFILES := $(PARALLEL_HFILES) tests/suites.h
-TEST_CFILES := $(PARALLEL_CFILES) tests/main.c tests/fnf.c
+TEST_CFILES := $(PARALLEL_CFILES) tests/main.c tests/fnf.c tests/locked_val.c
 
 # default make target if none is specified.
 .DEFAULT_GOAL := list
