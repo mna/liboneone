@@ -1,0 +1,13 @@
+# Apple desktop files
+.DS_Store
+
+# direnv file
+.envrc
+
+# build directory
+/build
+!/build/.dummy
+
+# Vim temporary files
+*.sw?
+
