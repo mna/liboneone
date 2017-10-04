@@ -1,7 +1,5 @@
-#include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <string.h>
 
 #include "parallel.h"
 #include "_errors.h"
@@ -89,7 +87,9 @@ int parallel_fnf_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *ar
 
 error2:
   free(fnf);
-  parallel_wait_group_done(wg); // will not be called by thunk
+  if(wg) {
+    parallel_wait_group_done(wg); // will not be called by thunk
+  }
 error1:
   pthread_attr_destroy(&attr);
 error0:

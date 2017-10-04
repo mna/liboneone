@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stdio.h>
+#include <string.h>
+
 // ERRCLEANUP jumps to the error##labelnum label if errVal is not 0.
 #define ERRCLEANUP(errVal, labelnum) if((errVal)) goto error##labelnum
 
