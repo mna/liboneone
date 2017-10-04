@@ -57,6 +57,7 @@ int parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *
   pthread_attr_t attr;
   pthread_t t;
   int err = 0;
+  _spawn_s *spawn = NULL;
 
   // configure the thread's stack size
   err = pthread_attr_init(&attr);
@@ -65,7 +66,7 @@ int parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *
   ERRCLEANUP(err, 1);
 
   // create the thunk to call fn with the signature expected by pthread
-  _spawn_s *spawn = malloc(sizeof(_spawn_s));
+  spawn = malloc(sizeof(_spawn_s));
   NULLFATAL(spawn, "out of memory");
   spawn->fn = fn;
   spawn->arg = arg;

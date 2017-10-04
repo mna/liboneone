@@ -4,6 +4,14 @@ CFLAGS ?= -Wall -pedantic -Werror -g -std=c11
 LDLIBS ?=
 LDFLAGS ?=
 
+GCCVERSION := $(shell $(CC) --version | grep ^gcc | sed 's/^.* //g')
+# See https://kristerw.blogspot.ca/2017/09/useful-gcc-warning-options-not-enabled.html
+CEXTRA_WARNINGS := -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion -Wshadow -Wformat=2
+
+ifneq ($(GCCVERSION),)
+	CFLAGS += $(CEXTRA_WARNINGS)
+endif
+
 # ifeq ($(msan),1)
 # 	# see https://clang.llvm.org/docs/MemorySanitizer.html
 # 	CFLAGS += -fsanitize=memory -fno-omit-frame-pointer -O1
