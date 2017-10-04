@@ -21,18 +21,18 @@ static size_t _get_default_stack_size() {
   return default_stack_size;
 }
 
-typedef struct _fnf_s {
+typedef struct _spawn_s {
   void (*fn) (void *);
   void *arg;
   parallel_wait_group_s *wg;
-} _fnf_s;
+} _spawn_s;
 
-static void *_fnf_thunk(void *arg) {
-  _fnf_s *fnf = arg;
-  if(fnf) {
-    parallel_wait_group_s *wg = fnf->wg;
-    fnf->fn(fnf->arg);
-    free(fnf);
+static void *_spawn_thunk(void *arg) {
+  _spawn_s *spawn = arg;
+  if(spawn) {
+    parallel_wait_group_s *wg = spawn->wg;
+    spawn->fn(spawn->arg);
+    free(spawn);
 
     if(wg) {
       parallel_wait_group_done(wg);
@@ -41,19 +41,19 @@ static void *_fnf_thunk(void *arg) {
   return NULL;
 }
 
-int parallel_fnf(void (*fn) (void *), void *arg) {
-  return parallel_fnf_wg_ssz(NULL, fn, arg, _get_default_stack_size());
+int parallel_spawn(void (*fn) (void *), void *arg) {
+  return parallel_spawn_wg_ssz(NULL, fn, arg, _get_default_stack_size());
 }
 
-int parallel_fnf_wg(parallel_wait_group_s *wg, void (*fn) (void *), void *arg) {
-  return parallel_fnf_wg_ssz(wg, fn, arg, _get_default_stack_size());
+int parallel_spawn_wg(parallel_wait_group_s *wg, void (*fn) (void *), void *arg) {
+  return parallel_spawn_wg_ssz(wg, fn, arg, _get_default_stack_size());
 }
 
-int parallel_fnf_ssz(void (*fn) (void *), void *arg, size_t stack_sz) {
-  return parallel_fnf_wg_ssz(NULL, fn, arg, stack_sz);
+int parallel_spawn_ssz(void (*fn) (void *), void *arg, size_t stack_sz) {
+  return parallel_spawn_wg_ssz(NULL, fn, arg, stack_sz);
 }
 
-int parallel_fnf_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg, size_t stack_sz) {
+int parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg, size_t stack_sz) {
   pthread_attr_t attr;
   pthread_t t;
   int err = 0;
@@ -65,11 +65,11 @@ int parallel_fnf_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *ar
   ERRCLEANUP(err, 1);
 
   // create the thunk to call fn with the signature expected by pthread
-  _fnf_s *fnf = malloc(sizeof(_fnf_s));
-  NULLFATAL(fnf, "out of memory");
-  fnf->fn = fn;
-  fnf->arg = arg;
-  fnf->wg = wg;
+  _spawn_s *spawn = malloc(sizeof(_spawn_s));
+  NULLFATAL(spawn, "out of memory");
+  spawn->fn = fn;
+  spawn->arg = arg;
+  spawn->wg = wg;
 
   // at this point the wait group must be incremented
   if(wg) {
@@ -77,16 +77,16 @@ int parallel_fnf_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *ar
   }
 
   // create the detached thread
-  err = pthread_create(&t, &attr, _fnf_thunk, fnf);
+  err = pthread_create(&t, &attr, _spawn_thunk, spawn);
   ERRCLEANUP(err, 2);
   err = pthread_detach(t);
   ERRFATAL(err, "pthread_detach");
 
-  // do not free fnf if call succeeds - will be freed in thunk
+  // do not free spawn if call succeeds - will be freed in thunk
   goto error1;
 
 error2:
-  free(fnf);
+  free(spawn);
   if(wg) {
     parallel_wait_group_done(wg); // will not be called by thunk
   }

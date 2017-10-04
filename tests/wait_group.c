@@ -6,12 +6,12 @@
 
 long sleep_before_done = 1000;
 
-static void _fnf(void *arg) {
+static void _spawn(void *arg) {
   long *us = arg;
   usleep(*us);
 }
 
-static void _fnf_wait(void *arg) {
+static void _spawn_wait(void *arg) {
   parallel_wait_group_s *wg = arg;
   parallel_wait_group_wait(wg);
 }
@@ -20,9 +20,9 @@ TEST test_wait_group_multi_wait() {
   parallel_wait_group_s *wg1 = parallel_wait_group_new(0);
   parallel_wait_group_s *wg2 = parallel_wait_group_new(1);
 
-  // start 2 fnf waiting on wg2, waited for by wg1
-  parallel_fnf_wg(wg1, _fnf_wait, wg2);
-  parallel_fnf_wg(wg1, _fnf_wait, wg2);
+  // start 2 spawn waiting on wg2, waited for by wg1
+  parallel_spawn_wg(wg1, _spawn_wait, wg2);
+  parallel_spawn_wg(wg1, _spawn_wait, wg2);
 
   usleep(sleep_before_done);
 
@@ -39,14 +39,14 @@ TEST test_wait_group_multi_wait() {
   PASS();
 }
 
-TEST test_wait_group_wait_fnf() {
+TEST test_wait_group_wait_spawn() {
   parallel_wait_group_s *wg = parallel_wait_group_new(0);
 
   timer_t timer;
   timer_start(&timer);
 
-  parallel_fnf_wg(wg, _fnf, &sleep_before_done);
-  parallel_fnf_wg(wg, _fnf, &sleep_before_done);
+  parallel_spawn_wg(wg, _spawn, &sleep_before_done);
+  parallel_spawn_wg(wg, _spawn, &sleep_before_done);
   parallel_wait_group_wait(wg);
 
   long us = (long)timer_delta_us(&timer);
@@ -83,7 +83,7 @@ TEST test_wait_group_new() {
 SUITE(wait_group) {
   RUN_TEST(test_wait_group_new);
   RUN_TEST(test_wait_group_done_then_wait);
-  RUN_TEST(test_wait_group_wait_fnf);
+  RUN_TEST(test_wait_group_wait_spawn);
   RUN_TEST(test_wait_group_multi_wait);
 }
 

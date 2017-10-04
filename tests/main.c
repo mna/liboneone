@@ -8,7 +8,7 @@ GREATEST_MAIN_DEFS();
 int main(int argc, char **argv) {
   GREATEST_MAIN_BEGIN();
 
-  RUN_SUITE(fnf);
+  RUN_SUITE(spawn);
   RUN_SUITE(locked_val);
   RUN_SUITE(wait_group);
 
