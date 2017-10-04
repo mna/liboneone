@@ -1,3 +1,6 @@
 [submodule "deps/greatest"]
 	path = deps/greatest
 	url = https://github.com/silentbicycle/greatest.git
+[submodule "deps/timer"]
+	path = deps/timer
+	url = https://github.com/clibs/timer.git

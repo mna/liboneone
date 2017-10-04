@@ -26,22 +26,36 @@ static size_t _get_default_stack_size() {
 typedef struct _fnf_s {
   void (*fn) (void *);
   void *arg;
+  parallel_wait_group_s *wg;
 } _fnf_s;
 
 static void *_fnf_thunk(void *arg) {
   _fnf_s *fnf = arg;
   if(fnf) {
+    parallel_wait_group_s *wg = fnf->wg;
     fnf->fn(fnf->arg);
     free(fnf);
+
+    if(wg) {
+      parallel_wait_group_done(wg);
+    }
   }
   return NULL;
 }
 
 int parallel_fnf(void (*fn) (void *), void *arg) {
-  return parallel_fnf_ssz(fn, arg, _get_default_stack_size());
+  return parallel_fnf_wg_ssz(NULL, fn, arg, _get_default_stack_size());
+}
+
+int parallel_fnf_wg(parallel_wait_group_s *wg, void (*fn) (void *), void *arg) {
+  return parallel_fnf_wg_ssz(wg, fn, arg, _get_default_stack_size());
 }
 
 int parallel_fnf_ssz(void (*fn) (void *), void *arg, size_t stack_sz) {
+  return parallel_fnf_wg_ssz(NULL, fn, arg, stack_sz);
+}
+
+int parallel_fnf_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg, size_t stack_sz) {
   pthread_attr_t attr;
   pthread_t t;
   int err = 0;
@@ -57,6 +71,12 @@ int parallel_fnf_ssz(void (*fn) (void *), void *arg, size_t stack_sz) {
   NULLFATAL(fnf, "out of memory");
   fnf->fn = fn;
   fnf->arg = arg;
+  fnf->wg = wg;
+
+  // at this point the wait group must be incremented
+  if(wg) {
+    parallel_wait_group_add(wg, 1);
+  }
 
   // create the detached thread
   err = pthread_create(&t, &attr, _fnf_thunk, fnf);
@@ -69,6 +89,7 @@ int parallel_fnf_ssz(void (*fn) (void *), void *arg, size_t stack_sz) {
 
 error2:
   free(fnf);
+  parallel_wait_group_done(wg); // will not be called by thunk
 error1:
   pthread_attr_destroy(&attr);
 error0:

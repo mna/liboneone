@@ -3,22 +3,6 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-// Fire and forget
-
-/*
- * parallel_fnf launches a new thread in "fire and forget" mode
- * (i.e. detached state) to run the provided function. The arg
- * is passed to the function as argument, it can be NULL.
- * It returns 0 on success, the pthread error number on error.
-*/
-int parallel_fnf(void (*fn) (void *), void *arg);
-
-/*
- * parallel_fnf_ssz is identical to parallel_fnf except that the thread's
- * stack size can be specified.
-*/
-int parallel_fnf_ssz(void (*fn) (void *), void *arg, size_t stack_sz);
-
 // locked value
 
 typedef struct parallel_locked_val_s parallel_locked_val_s;
@@ -38,4 +22,23 @@ void parallel_wait_group_free(parallel_wait_group_s *wg);
 void parallel_wait_group_add(parallel_wait_group_s *wg, int delta);
 void parallel_wait_group_done(parallel_wait_group_s *wg);
 void parallel_wait_group_wait(parallel_wait_group_s *wg);
+
+// Fire and forget
+
+/*
+ * parallel_fnf launches a new thread in "fire and forget" mode
+ * (i.e. detached state) to run the provided function. The arg
+ * is passed to the function as argument, it can be NULL.
+ * It returns 0 on success, the pthread error number on error.
+*/
+int parallel_fnf(void (*fn) (void *), void *arg);
+
+/*
+ * parallel_fnf_ssz is identical to parallel_fnf except that the thread's
+ * stack size can be specified.
+*/
+int parallel_fnf_ssz(void (*fn) (void *), void *arg, size_t stack_sz);
+
+int parallel_fnf_wg(parallel_wait_group_s *wg, void (*fn) (void *), void *arg);
+int parallel_fnf_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg, size_t stack_sz);
 
