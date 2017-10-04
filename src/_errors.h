@@ -21,3 +21,12 @@
                                       } while(0);
 
 
+// NEGFATAL prints msg and aborts if intVal is negative.
+#define NEGFATAL(intVal, msg)       do {                                                    \
+                                        if((intVal) < 0) {                                  \
+                                          printf("%s\n", (msg));                            \
+                                          abort();                                          \
+                                        }                                                   \
+                                      } while(0);
+
+

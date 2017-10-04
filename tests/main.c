@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "../src/parallel.h"
 
 #include "../deps/greatest/greatest.h"
@@ -11,6 +10,7 @@ int main(int argc, char **argv) {
 
   RUN_SUITE(fnf);
   RUN_SUITE(locked_val);
+  RUN_SUITE(wait_group);
 
   GREATEST_MAIN_END();
 }
