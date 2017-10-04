@@ -26,8 +26,7 @@ TEST test_wait_group_multi_wait() {
 
   usleep(sleep_before_done);
 
-  timer_t timer;
-  timer_start(&timer);
+  timer_t timer; timer_start(&timer);
   parallel_wait_group_done(wg2);
   parallel_wait_group_wait(wg1);
   long us = (long)timer_delta_us(&timer);
@@ -42,8 +41,7 @@ TEST test_wait_group_multi_wait() {
 TEST test_wait_group_wait_spawn() {
   parallel_wait_group_s *wg = parallel_wait_group_new(0);
 
-  timer_t timer;
-  timer_start(&timer);
+  timer_t timer; timer_start(&timer);
 
   parallel_spawn_wg(wg, _spawn, &sleep_before_done);
   parallel_spawn_wg(wg, _spawn, &sleep_before_done);
@@ -61,8 +59,7 @@ TEST test_wait_group_done_then_wait() {
   parallel_wait_group_s *wg = parallel_wait_group_new(1);
   parallel_wait_group_done(wg);
 
-  timer_t timer;
-  timer_start(&timer);
+  timer_t timer; timer_start(&timer);
   parallel_wait_group_wait(wg);
   long us = (long)timer_delta_us(&timer);
   ASSERT_IN_RANGE(0L, us, 5L);
@@ -80,10 +77,23 @@ TEST test_wait_group_new() {
   PASS();
 }
 
+TEST test_wait_group_wait_on_zero() {
+  parallel_wait_group_s *wg = parallel_wait_group_new(0);
+
+  timer_t timer; timer_start(&timer);
+  parallel_wait_group_wait(wg);
+  long us = (long)timer_delta_us(&timer);
+  ASSERT_IN_RANGE(0L, us, 5L);
+
+  parallel_wait_group_free(wg);
+  PASS();
+}
+
 SUITE(wait_group) {
   RUN_TEST(test_wait_group_new);
   RUN_TEST(test_wait_group_done_then_wait);
   RUN_TEST(test_wait_group_wait_spawn);
   RUN_TEST(test_wait_group_multi_wait);
+  RUN_TEST(test_wait_group_wait_on_zero);
 }
 
