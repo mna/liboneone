@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
+
 #include "../src/parallel.h"
 #include "../deps/greatest/greatest.h"
 

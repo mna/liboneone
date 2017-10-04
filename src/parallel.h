@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stdlib.h>
+// Users must include:
+// #include <stdlib.h>
 
 #define _POSIX_C_SOURCE 200809L
 
@@ -37,6 +38,16 @@ void parallel_wait_group_free(parallel_wait_group_s *wg);
 void parallel_wait_group_add(parallel_wait_group_s *wg, int delta);
 void parallel_wait_group_done(parallel_wait_group_s *wg);
 void parallel_wait_group_wait(parallel_wait_group_s *wg);
+
+// channel
+
+typedef struct parallel_channel_s parallel_channel_s;
+
+parallel_channel_s * parallel_channel_new(int capacity);
+void parallel_channel_free(parallel_channel_s *ch);
+void parallel_channel_send(parallel_channel_s *ch, void *value);
+void * parallel_channel_recv(parallel_channel_s *ch);
+void parallel_channel_close(parallel_channel_s *ch);
 
 // spawn
 

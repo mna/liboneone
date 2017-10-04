@@ -1,0 +1,7 @@
+TODOs
+=====
+
+- Use macros to unify implementations of locked_val and rwlocked_val?
+- Build and test on Linux
+- Performance tests with a TCP echo server
+

@@ -1,4 +1,7 @@
 #include <pthread.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "parallel.h"
 #include "_errors.h"

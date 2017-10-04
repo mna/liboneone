@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "../src/parallel.h"
 
 #include "../deps/greatest/greatest.h"

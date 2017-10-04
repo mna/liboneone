@@ -4,6 +4,7 @@ CFLAGS ?= -Wall -pedantic -Werror -g -std=c11
 LDLIBS ?=
 LDFLAGS ?=
 
+# pathetic and lazy attempt to detect if the compiler is GCC
 GCCVERSION := $(shell $(CC) --version | grep ^gcc | sed 's/^.* //g')
 # See https://kristerw.blogspot.ca/2017/09/useful-gcc-warning-options-not-enabled.html
 CEXTRA_WARNINGS := -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion -Wshadow -Wformat=2
@@ -12,6 +13,7 @@ ifneq ($(GCCVERSION),)
 	CFLAGS += $(CEXTRA_WARNINGS)
 endif
 
+# TODO: try on Linux, doesn't work on macOS
 # ifeq ($(msan),1)
 # 	# see https://clang.llvm.org/docs/MemorySanitizer.html
 # 	CFLAGS += -fsanitize=memory -fno-omit-frame-pointer -O1
@@ -24,11 +26,12 @@ endif
 
 # build in child directory for easier cleanup
 BUILD_DIR := build
+DEPS_DIR := deps
 
 # list of source files for the project and dependencies
-PARALLEL_CFILES := src/spawn.c src/locked_val.c src/rwlocked_val.c src/wait_group.c
+PARALLEL_CFILES := src/spawn.c src/locked_val.c src/rwlocked_val.c src/wait_group.c src/channel.c
 PARALLEL_HFILES := src/parallel.h src/_errors.h
-TIMER_CFILES := deps/timer/src/timer.c
+TIMER_CFILES := $(DEPS_DIR)/timer/src/timer.c
 TEST_HFILES := $(PARALLEL_HFILES) tests/suites.h
 TEST_CFILES := $(PARALLEL_CFILES) $(TIMER_CFILES) tests/main.c tests/spawn.c tests/locked_val.c tests/rwlocked_val.c tests/wait_group.c
 
@@ -47,7 +50,12 @@ $(BUILD_DIR)/test: $(TEST_CFILES) $(TEST_HFILES)
 # build and run test executable
 .PHONY: test
 test: $(BUILD_DIR)/test
-	$^ -v | deps/greatest/contrib/greenest
+	$^ -v | $(DEPS_DIR)/greatest/contrib/greenest
+
+# list todos, fixmes and bugs
+.PHONY: todo
+todo:
+	ag --ignore $(BUILD_DIR) --ignore $(DEPS_DIR) "\b(TODO|BUG|FIXME)\b"
 
 # cleanup build artefacts
 .PHONY: clean
