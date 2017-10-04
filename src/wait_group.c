@@ -32,8 +32,12 @@ void parallel_wait_group_free(parallel_wait_group_s *wg) {
     return;
   }
 
-  pthread_mutex_destroy(&(wg->lock));
-  pthread_cond_destroy(&(wg->cond));
+  int err = 0;
+  err = pthread_mutex_destroy(&(wg->lock));
+  ERRFATAL(err, "pthread_mutex_destroy");
+  err = pthread_cond_destroy(&(wg->cond));
+  ERRFATAL(err, "pthread_cond_destroy");
+
   free(wg);
 }
 

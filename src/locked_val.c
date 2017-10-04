@@ -27,7 +27,8 @@ void * parallel_locked_val_free(parallel_locked_val_s *lv) {
   }
 
   void *val = lv->val;
-  pthread_mutex_destroy(&(lv->lock));
+  int err = pthread_mutex_destroy(&(lv->lock));
+  ERRFATAL(err, "pthread_mutex_destroy");
 
   free(lv);
   return val;
