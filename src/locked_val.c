@@ -63,7 +63,7 @@ void * parallel_locked_val_get(parallel_locked_val_s *lv) {
   return val;
 }
 
-void * parallel_locked_val_with(parallel_locked_val_s *lv, void *(*fn) (void *)) {
+void * parallel_locked_val_with(parallel_locked_val_s *lv, parallel_locked_val_func fn) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));

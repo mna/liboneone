@@ -4,6 +4,9 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+typedef void *(*parallel_locked_val_func) (void *);
+typedef void (*parallel_locked_rdval_func) (void *);
+
 // locked value
 
 typedef struct parallel_locked_val_s parallel_locked_val_s;
@@ -12,7 +15,18 @@ parallel_locked_val_s * parallel_locked_val_new(void *initial_val);
 void * parallel_locked_val_free(parallel_locked_val_s *lv);
 void * parallel_locked_val_set(parallel_locked_val_s *lv, void *new_val);
 void * parallel_locked_val_get(parallel_locked_val_s *lv);
-void * parallel_locked_val_with(parallel_locked_val_s *lv, void *(*fn) (void *));
+void * parallel_locked_val_with(parallel_locked_val_s *lv, parallel_locked_val_func fn);
+
+// rwlocked value
+
+typedef struct parallel_rwlocked_val_s parallel_rwlocked_val_s;
+
+parallel_rwlocked_val_s * parallel_rwlocked_val_new(void *initial_val);
+void * parallel_rwlocked_val_free(parallel_rwlocked_val_s *rwlv);
+void * parallel_rwlocked_val_set(parallel_rwlocked_val_s *rwlv, void *new_val);
+void * parallel_rwlocked_val_get(parallel_rwlocked_val_s *rwlv);
+void * parallel_rwlocked_val_rdwith(parallel_rwlocked_val_s *rwlv, parallel_locked_rdval_func fn);
+void * parallel_rwlocked_val_wrwith(parallel_rwlocked_val_s *rwlv, parallel_locked_val_func fn);
 
 // wait group
 
