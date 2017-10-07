@@ -4,6 +4,12 @@
 // #include <stdio.h>
 // #include <string.h>
 
+// FATAL prints msg and aborts unconditionnally.
+#define FATAL(msg)                   do {                                                   \
+                                       printf("%s\n", (msg));                               \
+                                       abort();                                             \
+                                     } while(0);
+
 // ERRCLEANUP jumps to the error##labelnum label if errVal is not 0.
 #define ERRCLEANUP(errVal, labelnum) if((errVal)) goto error##labelnum
 

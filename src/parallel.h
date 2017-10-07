@@ -5,6 +5,11 @@
 
 #define _POSIX_C_SOURCE 200809L
 
+typedef enum parallel_error {
+  ESUCCESS = 0,
+  ECLOSEDCHAN = -1,
+} parallel_error;
+
 typedef void *(*parallel_locked_val_func) (void *);
 typedef void (*parallel_locked_rdval_func) (void *);
 
@@ -45,9 +50,9 @@ typedef struct parallel_channel_s parallel_channel_s;
 
 parallel_channel_s * parallel_channel_new(int capacity);
 void parallel_channel_free(parallel_channel_s *ch);
-void parallel_channel_send(parallel_channel_s *ch, void *value);
-void * parallel_channel_recv(parallel_channel_s *ch);
-void parallel_channel_close(parallel_channel_s *ch);
+int parallel_channel_send(parallel_channel_s *ch, void *value);
+int parallel_channel_recv(parallel_channel_s *ch, void **value);
+int parallel_channel_close(parallel_channel_s *ch);
 
 // spawn
 
