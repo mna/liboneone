@@ -22,6 +22,35 @@ typedef struct parallel_channel_s {
   _channel_waiter_s *qrecv;
 } parallel_channel_s;
 
+_channel_waiter_s *_new_waiter() {
+  _channel_waiter_s *w = malloc(sizeof(_channel_waiter_s));
+  NULLFATAL(w, "out of memory");
+  w->val = NULL;
+  w->next = NULL;
+
+  int err = 0;
+  err = pthread_mutex_init(&(w->lock), NULL);
+  ERRFATAL(err, "pthread_mutex_init");
+
+  err = pthread_cond_init(&(w->cond), NULL);
+  ERRFATAL(err, "pthread_cond_init");
+
+  return w;
+}
+
+void _free_waiter(_channel_waiter_s *w) {
+  if(!w) {
+    return;
+  }
+
+  int err = 0;
+  err = pthread_mutex_destroy(&(w->lock));
+  ERRFATAL(err, "pthread_mutex_destroy");
+  err = pthread_cond_destroy(&(w->cond));
+  ERRFATAL(err, "pthread_cond_destroy");
+  free(w);
+}
+
 void _append_waiter(_channel_waiter_s **list, _channel_waiter_s *w) {
   if(!*list) {
     *list = w;
@@ -32,6 +61,10 @@ void _append_waiter(_channel_waiter_s **list, _channel_waiter_s *w) {
   for (p = *list; p->next; p = p->next)
     ;
   p->next = w;
+}
+
+void _signal_waiter(_channel_waiter_s *w) {
+
 }
 
 parallel_channel_s * parallel_channel_new(int capacity) {
@@ -89,8 +122,7 @@ int parallel_channel_send(parallel_channel_s *ch, void *value) {
   }
 
   // otherwise add the sender to the waiting list
-  _channel_waiter_s *s = malloc(sizeof(_channel_waiter_s));
-  NULLFATAL(s, "out of memory");
+  _channel_waiter_s *s = _new_waiter();
 
   s->val = value;
   _append_waiter(&(ch->qsend), s);
@@ -131,8 +163,7 @@ int parallel_channel_recv(parallel_channel_s *ch, void **value) {
   }
 
   // otherwise add the receiver to the waiting list
-  _channel_waiter_s *r = malloc(sizeof(_channel_waiter_s));
-  NULLFATAL(r, "out of memory");
+  _channel_waiter_s *r = _new_waiter();
 
   r->val = NULL;
   _append_waiter(&(ch->qrecv), r);
@@ -176,10 +207,10 @@ int parallel_channel_close(parallel_channel_s *ch) {
 
   // signal all waiters
   for(_channel_waiter_s *w = s; w; w = w->next) {
-    _signal_waiter(w, NULL);
+    _signal_waiter(w);
   }
   for(_channel_waiter_s *w = r; w; w = w->next) {
-    _signal_waiter(w, NULL);
+    _signal_waiter(w);
   }
 
   goto error0;
