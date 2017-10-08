@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -49,6 +50,86 @@ TEST test_send_recv() {
   PASS();
 }
 
+static void _spawn_senda(void *arg) {
+  parallel_channel_s *ch = arg;
+  parallel_channel_send(ch, "a");
+}
+
+static void _spawn_sendb(void *arg) {
+  parallel_channel_s *ch = arg;
+  parallel_channel_send(ch, "b");
+}
+
+TEST test_block_recv_multi_send() {
+  parallel_wait_group_s *wg = parallel_wait_group_new(0);
+  parallel_channel_s *ch = parallel_channel_new();
+
+  parallel_spawn_wg(wg, _spawn_senda, ch);
+  parallel_spawn_wg(wg, _spawn_sendb, ch);
+  usleep(100000); // let spawned threads block on send
+
+  char *recvd;
+  int err = parallel_channel_recv(ch, (void **)&recvd);
+  ERRFATAL(err, "parallel_channel_recv");
+  ASSERT(strcmp(recvd, "a") == 0 || strcmp(recvd, "b") == 0);
+
+  char *next = strcmp(recvd, "a") == 0 ? "b" : "a";
+  err = parallel_channel_recv(ch, (void **)&recvd);
+  ERRFATAL(err, "parallel_channel_recv");
+  ASSERT_STR_EQ(next, recvd);
+
+  parallel_wait_group_wait(wg);
+  parallel_channel_free(ch);
+  parallel_wait_group_free(wg);
+
+  PASS();
+}
+
+static void _spawn_blocked_send(void *arg) {
+  parallel_channel_s *ch = arg;
+  parallel_channel_send(ch, "a");
+}
+
+TEST test_close_with_blocked_sender() {
+  parallel_wait_group_s *wg = parallel_wait_group_new(0);
+  parallel_channel_s *ch = parallel_channel_new();
+
+  parallel_spawn_wg(wg, _spawn_blocked_send, ch);
+  usleep(100000); // let spawned thread block on send
+
+  int err = parallel_channel_close(ch);
+  ERRFATAL(err, "parallel_channel_close");
+
+  parallel_wait_group_wait(wg);
+  parallel_channel_free(ch);
+  parallel_wait_group_free(wg);
+
+  PASS();
+}
+
+static void _spawn_blocked_recv(void *arg) {
+  parallel_channel_s *ch = arg;
+  char *recvd;
+  parallel_channel_recv(ch, (void **)&recvd);
+}
+
+TEST test_close_with_blocked_receiver() {
+  parallel_wait_group_s *wg = parallel_wait_group_new(0);
+  parallel_channel_s *ch = parallel_channel_new();
+
+  parallel_spawn_wg(wg, _spawn_blocked_recv, ch);
+  usleep(100000); // let spawned thread block on send
+
+  int err = parallel_channel_close(ch);
+  ERRFATAL(err, "parallel_channel_close");
+
+  parallel_wait_group_wait(wg);
+  parallel_channel_free(ch);
+  parallel_wait_group_free(wg);
+
+  PASS();
+}
+
 TEST test_channel_new() {
   parallel_channel_s *ch = parallel_channel_new();
   ASSERT(ch);
@@ -71,5 +152,9 @@ SUITE(channel) {
   RUN_TEST(test_channel_new);
   RUN_TEST(test_channel_close);
   RUN_TEST(test_send_recv);
+  RUN_TEST(test_block_recv_multi_send);
+  RUN_TEST(test_close_with_blocked_sender);
+  RUN_TEST(test_close_with_blocked_receiver);
+  // TODO: test free with blocked waiters? should abort though...
 }
 

@@ -232,6 +232,8 @@ int parallel_channel_close(parallel_channel_s *ch) {
   ch->closed = true;
   _channel_waiter_s *s = ch->qsend;
   _channel_waiter_s *r = ch->qrecv;
+  ch->qsend = NULL;
+  ch->qrecv = NULL;
 
   // can unlock now, impossible to add new waiters with channel closed
   merr = pthread_mutex_unlock(&(ch->lock));
