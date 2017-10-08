@@ -33,7 +33,7 @@ PARALLEL_CFILES := src/spawn.c src/locked_val.c src/rwlocked_val.c src/wait_grou
 PARALLEL_HFILES := src/parallel.h src/_errors.h
 TIMER_CFILES := $(DEPS_DIR)/timer/src/timer.c
 TEST_HFILES := $(PARALLEL_HFILES) tests/suites.h
-TEST_CFILES := $(PARALLEL_CFILES) $(TIMER_CFILES) tests/main.c tests/spawn.c tests/locked_val.c tests/rwlocked_val.c tests/wait_group.c
+TEST_CFILES := $(PARALLEL_CFILES) $(TIMER_CFILES) tests/main.c tests/spawn.c tests/locked_val.c tests/rwlocked_val.c tests/wait_group.c tests/channel.c
 
 # default make target if none is specified.
 .DEFAULT_GOAL := list

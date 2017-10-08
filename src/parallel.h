@@ -48,7 +48,7 @@ void parallel_wait_group_wait(parallel_wait_group_s *wg);
 
 typedef struct parallel_channel_s parallel_channel_s;
 
-parallel_channel_s * parallel_channel_new(int capacity);
+parallel_channel_s * parallel_channel_new();
 void parallel_channel_free(parallel_channel_s *ch);
 int parallel_channel_send(parallel_channel_s *ch, void *value);
 int parallel_channel_recv(parallel_channel_s *ch, void **value);

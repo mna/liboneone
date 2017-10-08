@@ -101,7 +101,7 @@ void *_block_waiter(_channel_waiter_s *w) {
   return value;
 }
 
-parallel_channel_s * parallel_channel_new(int capacity) {
+parallel_channel_s * parallel_channel_new() {
   parallel_channel_s *ch = malloc(sizeof(parallel_channel_s));
   ch->closed = false;
   ch->qsend = NULL;
@@ -164,6 +164,7 @@ int parallel_channel_send(parallel_channel_s *ch, void *value) {
   ERRFATAL(merr, "pthread_mutex_unlock");
 
   // block the send waiter until a receiver is ready
+  // TODO: should return an int err and set value on an arg.
   _block_waiter(s);
   goto error0;
 
@@ -203,6 +204,7 @@ int parallel_channel_recv(parallel_channel_s *ch, void **value) {
   ERRFATAL(merr, "pthread_mutex_unlock");
 
   // block the receive waiter until a sender is ready
+  // TODO: should return an int err and set value on an arg.
   void *recvd = _block_waiter(r);
   *value = recvd;
 

@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
   RUN_SUITE(locked_val);
   RUN_SUITE(rwlocked_val);
   RUN_SUITE(wait_group);
+  RUN_SUITE(channel);
 
   GREATEST_MAIN_END();
 }
