@@ -10,7 +10,8 @@
 
 typedef struct _channel_waiter_s {
   pthread_mutex_t lock;
-  pthread_mutex_t cond;
+  pthread_cond_t cond;
+  bool signaled;
   void *val;
   struct _channel_waiter_s *next;
 } _channel_waiter_s;
@@ -22,10 +23,11 @@ typedef struct parallel_channel_s {
   _channel_waiter_s *qrecv;
 } parallel_channel_s;
 
-_channel_waiter_s *_new_waiter() {
+_channel_waiter_s *_new_waiter(void *value) {
   _channel_waiter_s *w = malloc(sizeof(_channel_waiter_s));
   NULLFATAL(w, "out of memory");
-  w->val = NULL;
+  w->signaled = false;
+  w->val = value;
   w->next = NULL;
 
   int err = 0;
@@ -64,7 +66,39 @@ void _append_waiter(_channel_waiter_s **list, _channel_waiter_s *w) {
 }
 
 void _signal_waiter(_channel_waiter_s *w) {
+  int err = 0;
 
+  err = pthread_mutex_lock(&(w->lock));
+  ERRFATAL(err, "pthread_mutex_lock");
+
+  w->signaled = true;
+
+  err = pthread_cond_signal(&(w->cond));
+  ERRFATAL(err, "pthread_cond_signal");
+
+  err = pthread_mutex_unlock(&(w->lock));
+  ERRFATAL(err, "pthread_mutex_unlock");
+}
+
+void *_block_waiter(_channel_waiter_s *w) {
+  int err = 0;
+
+  err = pthread_mutex_lock(&(w->lock));
+  ERRFATAL(err, "pthread_mutex_lock");
+
+  while(!w->signaled) {
+    err = pthread_cond_wait(&(w->cond), &(w->lock));
+    ERRFATAL(err, "pthread_cond_wait");
+  }
+
+  void *value = w->val;
+  err = pthread_mutex_unlock(&(w->lock));
+  ERRFATAL(err, "pthread_mutex_unlock");
+
+  // waiter is removed from the channel's queue already, only
+  // needs to be freed.
+  _free_waiter(w);
+  return value;
 }
 
 parallel_channel_s * parallel_channel_new(int capacity) {
@@ -122,9 +156,7 @@ int parallel_channel_send(parallel_channel_s *ch, void *value) {
   }
 
   // otherwise add the sender to the waiting list
-  _channel_waiter_s *s = _new_waiter();
-
-  s->val = value;
+  _channel_waiter_s *s = _new_waiter(value);
   _append_waiter(&(ch->qsend), s);
 
   // unlock the channel
@@ -163,9 +195,7 @@ int parallel_channel_recv(parallel_channel_s *ch, void **value) {
   }
 
   // otherwise add the receiver to the waiting list
-  _channel_waiter_s *r = _new_waiter();
-
-  r->val = NULL;
+  _channel_waiter_s *r = _new_waiter(NULL);
   _append_waiter(&(ch->qrecv), r);
 
   // unlock the channel
