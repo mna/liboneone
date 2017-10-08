@@ -166,6 +166,5 @@ SUITE(channel) {
   RUN_TEST(test_block_recv_multi_send);
   RUN_TEST(test_close_with_blocked_sender);
   RUN_TEST(test_close_with_blocked_receiver);
-  // TODO: test free with blocked waiters? should abort though...
 }
 

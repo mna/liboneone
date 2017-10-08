@@ -172,6 +172,10 @@ parallel_channel_send(parallel_channel_s *ch, void *value) {
 
   // block the send waiter until a receiver is ready
   // TODO: should return an int err and set value on an arg.
+  // or (because _block_waiter cannot check closed on channel),
+  // return a sentinel value (pointer to a static var) representing
+  // closed channel. Can check here if it is that value and
+  // return ECLOSEDCHAN.
   _block_waiter(s);
   goto error0;
 
@@ -213,6 +217,10 @@ parallel_channel_recv(parallel_channel_s *ch, void **value) {
 
   // block the receive waiter until a sender is ready
   // TODO: should return an int err and set value on an arg.
+  // or (because _block_waiter cannot check closed on channel),
+  // return a sentinel value (pointer to a static var) representing
+  // closed channel. Can check here if it is that value and
+  // return ECLOSEDCHAN.
   void *recvd = _block_waiter(r);
   *value = recvd;
 
