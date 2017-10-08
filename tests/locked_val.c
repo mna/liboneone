@@ -6,7 +6,8 @@
 #include "../src/_errors.h"
 #include "../deps/greatest/greatest.h"
 
-TEST test_locked_val_new() {
+TEST
+test_locked_val_new() {
   parallel_locked_val_s *lv = parallel_locked_val_new(NULL);
   ASSERT(lv);
   parallel_locked_val_free(lv);
@@ -14,7 +15,8 @@ TEST test_locked_val_new() {
   PASS();
 }
 
-TEST test_locked_val_free_returns_value() {
+TEST
+test_locked_val_free_returns_value() {
   int value = 42;
   parallel_locked_val_s *lv = parallel_locked_val_new(&value);
   int *free_val = parallel_locked_val_free(lv);
@@ -23,7 +25,8 @@ TEST test_locked_val_free_returns_value() {
   PASS();
 }
 
-TEST test_locked_val_get() {
+TEST
+test_locked_val_get() {
   int value = 42;
   parallel_locked_val_s *lv = parallel_locked_val_new(&value);
   int *got_val = parallel_locked_val_get(lv);
@@ -33,7 +36,8 @@ TEST test_locked_val_get() {
   PASS();
 }
 
-TEST test_locked_val_set() {
+TEST
+test_locked_val_set() {
   int val1 = 42;
   int val2 = 84;
 
@@ -46,7 +50,8 @@ TEST test_locked_val_set() {
   PASS();
 }
 
-static void * _with_locked_val(void *val) {
+static void *
+_with_locked_val(void *val) {
   int *new_val = malloc(sizeof(int));
   NULLFATAL(new_val, "out of memory");
 
@@ -54,7 +59,8 @@ static void * _with_locked_val(void *val) {
   return new_val;
 }
 
-TEST test_locked_val_with() {
+TEST
+test_locked_val_with() {
   char *initial_value = "init";
   parallel_locked_val_s *lv = parallel_locked_val_new(initial_value);
   int *new_val = parallel_locked_val_with(lv, _with_locked_val);

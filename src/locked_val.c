@@ -11,7 +11,8 @@ typedef struct parallel_locked_val_s {
   void *val;
 } parallel_locked_val_s;
 
-parallel_locked_val_s * parallel_locked_val_new(void *initial_val) {
+parallel_locked_val_s *
+parallel_locked_val_new(void *initial_val) {
   parallel_locked_val_s *lv = malloc(sizeof(parallel_locked_val_s));
   NULLFATAL(lv, "out of memory");
 
@@ -22,7 +23,8 @@ parallel_locked_val_s * parallel_locked_val_new(void *initial_val) {
   return lv;
 }
 
-void * parallel_locked_val_free(parallel_locked_val_s *lv) {
+void *
+parallel_locked_val_free(parallel_locked_val_s *lv) {
   if(!lv) {
     return NULL;
   }
@@ -35,7 +37,8 @@ void * parallel_locked_val_free(parallel_locked_val_s *lv) {
   return val;
 }
 
-void * parallel_locked_val_set(parallel_locked_val_s *lv, void *new_val) {
+void *
+parallel_locked_val_set(parallel_locked_val_s *lv, void *new_val) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));
@@ -50,7 +53,8 @@ void * parallel_locked_val_set(parallel_locked_val_s *lv, void *new_val) {
   return old_val;
 }
 
-void * parallel_locked_val_get(parallel_locked_val_s *lv) {
+void *
+parallel_locked_val_get(parallel_locked_val_s *lv) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));
@@ -64,7 +68,8 @@ void * parallel_locked_val_get(parallel_locked_val_s *lv) {
   return val;
 }
 
-void * parallel_locked_val_with(parallel_locked_val_s *lv, parallel_locked_val_func fn) {
+void *
+parallel_locked_val_with(parallel_locked_val_s *lv, parallel_locked_val_func fn) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));

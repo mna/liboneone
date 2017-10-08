@@ -5,13 +5,15 @@
 #include "../src/parallel.h"
 #include "../deps/greatest/greatest.h"
 
-static void _spawn(void *arg) {
+static void
+_spawn(void *arg) {
   parallel_locked_val_s *lv = arg;
   int *val = parallel_locked_val_get(lv);
   *val = 10;
 }
 
-TEST test_spawn() {
+TEST
+test_spawn() {
   int val = 1;
   parallel_locked_val_s *lv = parallel_locked_val_new(&val);
   parallel_spawn(_spawn, lv);

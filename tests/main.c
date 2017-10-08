@@ -7,7 +7,8 @@
 
 GREATEST_MAIN_DEFS();
 
-int main(int argc, char **argv) {
+int
+main(int argc, char **argv) {
   GREATEST_MAIN_BEGIN();
 
   RUN_SUITE(spawn);

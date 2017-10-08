@@ -11,7 +11,8 @@ typedef struct parallel_rwlocked_val_s {
   void *val;
 } parallel_rwlocked_val_s;
 
-parallel_rwlocked_val_s * parallel_rwlocked_val_new(void *initial_val) {
+parallel_rwlocked_val_s *
+parallel_rwlocked_val_new(void *initial_val) {
   parallel_rwlocked_val_s *rwlv = malloc(sizeof(parallel_rwlocked_val_s));
   NULLFATAL(rwlv, "out of memory");
 
@@ -22,7 +23,8 @@ parallel_rwlocked_val_s * parallel_rwlocked_val_new(void *initial_val) {
   return rwlv;
 }
 
-void * parallel_rwlocked_val_free(parallel_rwlocked_val_s *rwlv) {
+void *
+parallel_rwlocked_val_free(parallel_rwlocked_val_s *rwlv) {
   if(!rwlv) {
     return NULL;
   }
@@ -35,7 +37,8 @@ void * parallel_rwlocked_val_free(parallel_rwlocked_val_s *rwlv) {
   return val;
 }
 
-void * parallel_rwlocked_val_set(parallel_rwlocked_val_s *rwlv, void *new_val) {
+void *
+parallel_rwlocked_val_set(parallel_rwlocked_val_s *rwlv, void *new_val) {
   int err = 0;
 
   err = pthread_rwlock_wrlock(&(rwlv->lock));
@@ -50,7 +53,8 @@ void * parallel_rwlocked_val_set(parallel_rwlocked_val_s *rwlv, void *new_val) {
   return old_val;
 }
 
-void * parallel_rwlocked_val_get(parallel_rwlocked_val_s *rwlv) {
+void *
+parallel_rwlocked_val_get(parallel_rwlocked_val_s *rwlv) {
   int err = 0;
 
   err = pthread_rwlock_rdlock(&(rwlv->lock));
@@ -64,7 +68,8 @@ void * parallel_rwlocked_val_get(parallel_rwlocked_val_s *rwlv) {
   return val;
 }
 
-void * parallel_rwlocked_val_rdwith(parallel_rwlocked_val_s *rwlv, parallel_locked_rdval_func fn) {
+void *
+parallel_rwlocked_val_rdwith(parallel_rwlocked_val_s *rwlv, parallel_locked_rdval_func fn) {
   int err = 0;
 
   err = pthread_rwlock_rdlock(&(rwlv->lock));
@@ -79,7 +84,8 @@ void * parallel_rwlocked_val_rdwith(parallel_rwlocked_val_s *rwlv, parallel_lock
   return val;
 }
 
-void * parallel_rwlocked_val_wrwith(parallel_rwlocked_val_s *rwlv, parallel_locked_val_func fn) {
+void *
+parallel_rwlocked_val_wrwith(parallel_rwlocked_val_s *rwlv, parallel_locked_val_func fn) {
   int err = 0;
 
   err = pthread_rwlock_wrlock(&(rwlv->lock));

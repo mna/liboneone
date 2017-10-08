@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <semaphore.h>
 #include <pthread.h>
 #include <stdbool.h>
 
@@ -23,7 +22,8 @@ typedef struct parallel_channel_s {
   _channel_waiter_s *qrecv;
 } parallel_channel_s;
 
-_channel_waiter_s *_new_waiter(void *value) {
+static _channel_waiter_s *
+_new_waiter(void *value) {
   _channel_waiter_s *w = malloc(sizeof(_channel_waiter_s));
   NULLFATAL(w, "out of memory");
   w->signaled = false;
@@ -40,7 +40,8 @@ _channel_waiter_s *_new_waiter(void *value) {
   return w;
 }
 
-void _free_waiter(_channel_waiter_s *w) {
+static void
+_free_waiter(_channel_waiter_s *w) {
   if(!w) {
     return;
   }
@@ -53,7 +54,8 @@ void _free_waiter(_channel_waiter_s *w) {
   free(w);
 }
 
-void _append_waiter(_channel_waiter_s **list, _channel_waiter_s *w) {
+static void
+_append_waiter(_channel_waiter_s **list, _channel_waiter_s *w) {
   if(!*list) {
     *list = w;
     return;
@@ -65,7 +67,8 @@ void _append_waiter(_channel_waiter_s **list, _channel_waiter_s *w) {
   p->next = w;
 }
 
-void _signal_waiter(_channel_waiter_s *w) {
+static void
+_signal_waiter(_channel_waiter_s *w) {
   int err = 0;
 
   err = pthread_mutex_lock(&(w->lock));
@@ -80,7 +83,8 @@ void _signal_waiter(_channel_waiter_s *w) {
   ERRFATAL(err, "pthread_mutex_unlock");
 }
 
-void *_block_waiter(_channel_waiter_s *w) {
+static void *
+_block_waiter(_channel_waiter_s *w) {
   int err = 0;
 
   err = pthread_mutex_lock(&(w->lock));
@@ -101,7 +105,8 @@ void *_block_waiter(_channel_waiter_s *w) {
   return value;
 }
 
-parallel_channel_s * parallel_channel_new() {
+parallel_channel_s *
+parallel_channel_new() {
   parallel_channel_s *ch = malloc(sizeof(parallel_channel_s));
   ch->closed = false;
   ch->qsend = NULL;
@@ -113,7 +118,8 @@ parallel_channel_s * parallel_channel_new() {
   return ch;
 }
 
-void parallel_channel_free(parallel_channel_s *ch) {
+void
+parallel_channel_free(parallel_channel_s *ch) {
   if(!ch) {
     return;
   }
@@ -135,7 +141,8 @@ void parallel_channel_free(parallel_channel_s *ch) {
   free(ch);
 }
 
-int parallel_channel_send(parallel_channel_s *ch, void *value) {
+int
+parallel_channel_send(parallel_channel_s *ch, void *value) {
   int err = ESUCCESS;
 
   int merr = pthread_mutex_lock(&(ch->lock));
@@ -175,7 +182,8 @@ error0:
   return err;
 }
 
-int parallel_channel_recv(parallel_channel_s *ch, void **value) {
+int
+parallel_channel_recv(parallel_channel_s *ch, void **value) {
   int err = ESUCCESS;
 
   int merr = pthread_mutex_lock(&(ch->lock));
@@ -217,7 +225,8 @@ error0:
   return err;
 }
 
-int parallel_channel_close(parallel_channel_s *ch) {
+int
+parallel_channel_close(parallel_channel_s *ch) {
   int err = ESUCCESS;
 
   // lock the channel

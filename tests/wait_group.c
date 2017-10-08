@@ -7,17 +7,20 @@
 
 long sleep_before_done = 1000;
 
-static void _spawn(void *arg) {
+static void
+_spawn(void *arg) {
   long *us = arg;
   usleep(*us);
 }
 
-static void _spawn_wait(void *arg) {
+static void
+_spawn_wait(void *arg) {
   parallel_wait_group_s *wg = arg;
   parallel_wait_group_wait(wg);
 }
 
-TEST test_wait_group_multi_wait() {
+TEST
+test_wait_group_multi_wait() {
   parallel_wait_group_s *wg1 = parallel_wait_group_new(0);
   parallel_wait_group_s *wg2 = parallel_wait_group_new(1);
 
@@ -39,7 +42,8 @@ TEST test_wait_group_multi_wait() {
   PASS();
 }
 
-TEST test_wait_group_wait_spawn() {
+TEST
+test_wait_group_wait_spawn() {
   parallel_wait_group_s *wg = parallel_wait_group_new(0);
 
   timer_t timer; timer_start(&timer);
@@ -56,7 +60,8 @@ TEST test_wait_group_wait_spawn() {
   PASS();
 }
 
-TEST test_wait_group_done_then_wait() {
+TEST
+test_wait_group_done_then_wait() {
   parallel_wait_group_s *wg = parallel_wait_group_new(1);
   parallel_wait_group_done(wg);
 
@@ -70,7 +75,8 @@ TEST test_wait_group_done_then_wait() {
   PASS();
 }
 
-TEST test_wait_group_new() {
+TEST
+test_wait_group_new() {
   parallel_wait_group_s *wg = parallel_wait_group_new(1);
   ASSERT(wg);
   parallel_wait_group_free(wg);
@@ -78,7 +84,8 @@ TEST test_wait_group_new() {
   PASS();
 }
 
-TEST test_wait_group_wait_on_zero() {
+TEST
+test_wait_group_wait_on_zero() {
   parallel_wait_group_s *wg = parallel_wait_group_new(0);
 
   timer_t timer; timer_start(&timer);

@@ -12,7 +12,8 @@ typedef struct parallel_wait_group_s {
   int count;
 } parallel_wait_group_s;
 
-parallel_wait_group_s * parallel_wait_group_new(int initial_count) {
+parallel_wait_group_s *
+parallel_wait_group_new(int initial_count) {
   parallel_wait_group_s *wg = malloc(sizeof(parallel_wait_group_s));
   NULLFATAL(wg, "out of memory");
 
@@ -30,7 +31,8 @@ parallel_wait_group_s * parallel_wait_group_new(int initial_count) {
   return wg;
 }
 
-void parallel_wait_group_free(parallel_wait_group_s *wg) {
+void
+parallel_wait_group_free(parallel_wait_group_s *wg) {
   if(!wg) {
     return;
   }
@@ -44,7 +46,8 @@ void parallel_wait_group_free(parallel_wait_group_s *wg) {
   free(wg);
 }
 
-void parallel_wait_group_add(parallel_wait_group_s *wg, int delta) {
+void
+parallel_wait_group_add(parallel_wait_group_s *wg, int delta) {
   if(delta == 0) {
     return;
   }
@@ -66,11 +69,13 @@ void parallel_wait_group_add(parallel_wait_group_s *wg, int delta) {
   ERRFATAL(err, "pthread_mutex_unlock");
 }
 
-void parallel_wait_group_done(parallel_wait_group_s *wg) {
+void
+parallel_wait_group_done(parallel_wait_group_s *wg) {
   parallel_wait_group_add(wg, -1);
 }
 
-void parallel_wait_group_wait(parallel_wait_group_s *wg) {
+void
+parallel_wait_group_wait(parallel_wait_group_s *wg) {
   int err = 0;
 
   err = pthread_mutex_lock(&(wg->lock));

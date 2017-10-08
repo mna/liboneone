@@ -7,7 +7,8 @@
 #include "parallel.h"
 #include "_errors.h"
 
-static size_t _get_default_stack_size() {
+static size_t
+_get_default_stack_size() {
   static size_t default_stack_size;
   if(default_stack_size) {
     return default_stack_size;
@@ -30,7 +31,8 @@ typedef struct _spawn_s {
   parallel_wait_group_s *wg;
 } _spawn_s;
 
-static void *_spawn_thunk(void *arg) {
+static void *
+_spawn_thunk(void *arg) {
   _spawn_s *spawn = arg;
   if(spawn) {
     parallel_wait_group_s *wg = spawn->wg;
@@ -44,19 +46,23 @@ static void *_spawn_thunk(void *arg) {
   return NULL;
 }
 
-int parallel_spawn(void (*fn) (void *), void *arg) {
+int
+parallel_spawn(void (*fn) (void *), void *arg) {
   return parallel_spawn_wg_ssz(NULL, fn, arg, _get_default_stack_size());
 }
 
-int parallel_spawn_wg(parallel_wait_group_s *wg, void (*fn) (void *), void *arg) {
+int
+parallel_spawn_wg(parallel_wait_group_s *wg, void (*fn) (void *), void *arg) {
   return parallel_spawn_wg_ssz(wg, fn, arg, _get_default_stack_size());
 }
 
-int parallel_spawn_ssz(void (*fn) (void *), void *arg, size_t stack_sz) {
+int
+parallel_spawn_ssz(void (*fn) (void *), void *arg, size_t stack_sz) {
   return parallel_spawn_wg_ssz(NULL, fn, arg, stack_sz);
 }
 
-int parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg, size_t stack_sz) {
+int
+parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg, size_t stack_sz) {
   pthread_attr_t attr;
   pthread_t t;
   int err = 0;

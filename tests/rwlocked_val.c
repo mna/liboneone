@@ -6,7 +6,8 @@
 #include "../src/_errors.h"
 #include "../deps/greatest/greatest.h"
 
-TEST test_rwlocked_val_new() {
+TEST
+test_rwlocked_val_new() {
   parallel_rwlocked_val_s *rwlv = parallel_rwlocked_val_new(NULL);
   ASSERT(rwlv);
   parallel_rwlocked_val_free(rwlv);
@@ -14,7 +15,8 @@ TEST test_rwlocked_val_new() {
   PASS();
 }
 
-TEST test_rwlocked_val_free_returns_value() {
+TEST
+test_rwlocked_val_free_returns_value() {
   int value = 42;
   parallel_rwlocked_val_s *rwlv = parallel_rwlocked_val_new(&value);
   int *free_val = parallel_rwlocked_val_free(rwlv);
@@ -23,7 +25,8 @@ TEST test_rwlocked_val_free_returns_value() {
   PASS();
 }
 
-TEST test_rwlocked_val_get() {
+TEST
+test_rwlocked_val_get() {
   int value = 42;
   parallel_rwlocked_val_s *rwlv = parallel_rwlocked_val_new(&value);
   int *got_val = parallel_rwlocked_val_get(rwlv);
@@ -34,7 +37,8 @@ TEST test_rwlocked_val_get() {
   PASS();
 }
 
-TEST test_rwlocked_val_set() {
+TEST
+test_rwlocked_val_set() {
   int val1 = 42;
   int val2 = 84;
 
@@ -47,7 +51,8 @@ TEST test_rwlocked_val_set() {
   PASS();
 }
 
-static void * _with_rwlocked_val(void *val) {
+static void *
+_with_rwlocked_val(void *val) {
   int *new_val = malloc(sizeof(int));
   NULLFATAL(new_val, "out of memory");
 
@@ -55,7 +60,8 @@ static void * _with_rwlocked_val(void *val) {
   return new_val;
 }
 
-TEST test_rwlocked_val_wrwith() {
+TEST
+test_rwlocked_val_wrwith() {
   char *initial_value = "init";
   parallel_rwlocked_val_s *rwlv = parallel_rwlocked_val_new(initial_value);
   int *new_val = parallel_rwlocked_val_wrwith(rwlv, _with_rwlocked_val);
@@ -67,10 +73,12 @@ TEST test_rwlocked_val_wrwith() {
   PASS();
 }
 
-static void _with_rdlocked_val(void *val) {
+static void
+_with_rdlocked_val(void *val) {
 }
 
-TEST test_rwlocked_val_rdwith() {
+TEST
+test_rwlocked_val_rdwith() {
   int initial_value = 1;
   parallel_rwlocked_val_s *rwlv = parallel_rwlocked_val_new(&initial_value);
   int *val = parallel_rwlocked_val_rdwith(rwlv, _with_rdlocked_val);
