@@ -1,16 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "../src/oneone.h"
+#include "../src/errors.h"
 
-#include "../src/parallel.h"
-#include "../src/_errors.h"
 #include "../deps/greatest/greatest.h"
 
 TEST
 test_locked_val_new() {
-  parallel_locked_val_s *lv = parallel_locked_val_new(NULL);
+  one_locked_val_s * lv = one_locked_val_new(NULL);
   ASSERT(lv);
-  parallel_locked_val_free(lv);
+  one_locked_val_free(lv);
 
   PASS();
 }
@@ -18,8 +15,8 @@ test_locked_val_new() {
 TEST
 test_locked_val_free_returns_value() {
   int value = 42;
-  parallel_locked_val_s *lv = parallel_locked_val_new(&value);
-  int *free_val = parallel_locked_val_free(lv);
+  one_locked_val_s * lv = one_locked_val_new(&value);
+  int * free_val = one_locked_val_free(lv);
   ASSERT_EQ(value, *free_val);
 
   PASS();
@@ -28,10 +25,10 @@ test_locked_val_free_returns_value() {
 TEST
 test_locked_val_get() {
   int value = 42;
-  parallel_locked_val_s *lv = parallel_locked_val_new(&value);
-  int *got_val = parallel_locked_val_get(lv);
+  one_locked_val_s * lv = one_locked_val_new(&value);
+  int * got_val = one_locked_val_get(lv);
   ASSERT_EQ(value, *got_val);
-  parallel_locked_val_free(lv);
+  one_locked_val_free(lv);
 
   PASS();
 }
@@ -41,18 +38,18 @@ test_locked_val_set() {
   int val1 = 42;
   int val2 = 84;
 
-  parallel_locked_val_s *lv = parallel_locked_val_new(&val1);
-  int *old_val = parallel_locked_val_set(lv, &val2);
+  one_locked_val_s * lv = one_locked_val_new(&val1);
+  int * old_val = one_locked_val_set(lv, &val2);
   ASSERT_EQ(val1, *old_val);
-  int *free_val = parallel_locked_val_free(lv);
+  int * free_val = one_locked_val_free(lv);
   ASSERT_EQ(val2, *free_val);
 
   PASS();
 }
 
 static void *
-_with_locked_val(void *val) {
-  int *new_val = malloc(sizeof(int));
+with_locked_val(void * val) {
+  int * new_val = malloc(sizeof(*new_val));
   NULLFATAL(new_val, "out of memory");
 
   *new_val = 100;
@@ -61,12 +58,12 @@ _with_locked_val(void *val) {
 
 TEST
 test_locked_val_with() {
-  char *initial_value = "init";
-  parallel_locked_val_s *lv = parallel_locked_val_new(initial_value);
-  int *new_val = parallel_locked_val_with(lv, _with_locked_val);
+  char * initial_value = "init";
+  one_locked_val_s * lv = one_locked_val_new(initial_value);
+  int * new_val = one_locked_val_with(lv, with_locked_val);
   ASSERT_EQ(100, *new_val);
 
-  parallel_locked_val_free(lv);
+  one_locked_val_free(lv);
   free(new_val);
 
   PASS();

@@ -1,167 +1,165 @@
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
-#include "../src/parallel.h"
-#include "../src/_errors.h"
+#include "../src/oneone.h"
+#include "../src/errors.h"
+
 #include "../deps/greatest/greatest.h"
 
 static void
-_spawn_chan(void *arg) {
-  parallel_channel_s *ch = arg;
+spawn_chan(void *arg) {
+  one_chan_s * ch = arg;
 
-  int *value;
-  int err = parallel_channel_recv(ch, (void **)&value);
-  ERRFATAL(err, "parallel_channel_recv");
+  int * value;
+  int err = one_chan_recv(ch, (void **)&value);
+  ERRFATAL(err, "one_chan_recv");
   int recvd = *value;
   free(value);
 
-  int *ret = malloc(sizeof(int));
+  int * ret = malloc(sizeof(*ret));
   *ret = recvd + 1;
 
-  err = parallel_channel_send(ch, ret);
-  ERRFATAL(err, "parallel_channel_send");
+  err = one_chan_send(ch, ret);
+  ERRFATAL(err, "one_chan_send");
 }
 
 TEST
 test_send_recv() {
-  parallel_wait_group_s *wg = parallel_wait_group_new(0);
-  parallel_channel_s *ch = parallel_channel_new();
+  one_wait_group_s * wg = one_wait_group_new(0);
+  one_chan_s * ch = one_chan_new();
 
-  parallel_spawn_wg(wg, _spawn_chan, ch);
+  one_spawn_wg(wg, spawn_chan, ch);
 
-  int *psend = malloc(sizeof(int));
+  int * psend = malloc(sizeof(*psend));
   *psend = 42;
-  int err = parallel_channel_send(ch, psend);
-  ERRFATAL(err, "parallel_channel_send");
+  int err = one_chan_send(ch, psend);
+  ERRFATAL(err, "one_chan_send");
 
-  int *recv = NULL;
-  err = parallel_channel_recv(ch, (void **)&recv);
-  ERRFATAL(err, "parallel_channel_recv");
+  int * recv = NULL;
+  err = one_chan_recv(ch, (void **)&recv);
+  ERRFATAL(err, "one_chan_recv");
   int got = *recv;
   free(recv);
 
   ASSERT_EQ_FMT(43, got, "%d");
 
-  parallel_wait_group_wait(wg);
+  one_wait_group_wait(wg);
 
-  parallel_channel_free(ch);
-  parallel_wait_group_free(wg);
+  one_chan_free(ch);
+  one_wait_group_free(wg);
 
   PASS();
 }
 
 static void
-_spawn_senda(void *arg) {
-  parallel_channel_s *ch = arg;
-  parallel_channel_send(ch, "a");
+spawn_senda(void *arg) {
+  one_chan_s * ch = arg;
+  one_chan_send(ch, "a");
 }
 
 static void
-_spawn_sendb(void *arg) {
-  parallel_channel_s *ch = arg;
-  parallel_channel_send(ch, "b");
+spawn_sendb(void *arg) {
+  one_chan_s *ch = arg;
+  one_chan_send(ch, "b");
 }
 
 TEST
 test_block_recv_multi_send() {
-  parallel_wait_group_s *wg = parallel_wait_group_new(0);
-  parallel_channel_s *ch = parallel_channel_new();
+  one_wait_group_s * wg = one_wait_group_new(0);
+  one_chan_s * ch = one_chan_new();
 
-  parallel_spawn_wg(wg, _spawn_senda, ch);
-  parallel_spawn_wg(wg, _spawn_sendb, ch);
+  one_spawn_wg(wg, spawn_senda, ch);
+  one_spawn_wg(wg, spawn_sendb, ch);
   usleep(100000); // let spawned threads block on send
 
-  char *recvd;
-  int err = parallel_channel_recv(ch, (void **)&recvd);
-  ERRFATAL(err, "parallel_channel_recv");
+  char * recvd;
+  int err = one_chan_recv(ch, (void **)&recvd);
+  ERRFATAL(err, "one_chan_recv");
   ASSERT(strcmp(recvd, "a") == 0 || strcmp(recvd, "b") == 0);
 
-  char *next = strcmp(recvd, "a") == 0 ? "b" : "a";
-  err = parallel_channel_recv(ch, (void **)&recvd);
-  ERRFATAL(err, "parallel_channel_recv");
+  char * next = strcmp(recvd, "a") == 0 ? "b" : "a";
+  err = one_chan_recv(ch, (void **)&recvd);
+  ERRFATAL(err, "one_chan_recv");
   ASSERT_STR_EQ(next, recvd);
 
-  parallel_wait_group_wait(wg);
-  parallel_channel_free(ch);
-  parallel_wait_group_free(wg);
+  one_wait_group_wait(wg);
+  one_chan_free(ch);
+  one_wait_group_free(wg);
 
   PASS();
 }
 
 static void
-_spawn_blocked_send(void *arg) {
-  parallel_channel_s *ch = arg;
-  parallel_channel_send(ch, "a");
+spawn_blocked_send(void * arg) {
+  one_chan_s * ch = arg;
+  one_chan_send(ch, "a");
 }
 
 TEST
 test_close_with_blocked_sender() {
-  parallel_wait_group_s *wg = parallel_wait_group_new(0);
-  parallel_channel_s *ch = parallel_channel_new();
+  one_wait_group_s * wg = one_wait_group_new(0);
+  one_chan_s * ch = one_chan_new();
 
-  parallel_spawn_wg(wg, _spawn_blocked_send, ch);
+  one_spawn_wg(wg, spawn_blocked_send, ch);
   usleep(100000); // let spawned thread block on send
 
-  int err = parallel_channel_close(ch);
-  ERRFATAL(err, "parallel_channel_close");
+  int err = one_chan_close(ch);
+  ERRFATAL(err, "one_chan_close");
 
-  parallel_wait_group_wait(wg);
-  parallel_channel_free(ch);
-  parallel_wait_group_free(wg);
+  one_wait_group_wait(wg);
+  one_chan_free(ch);
+  one_wait_group_free(wg);
 
   PASS();
 }
 
 static void
-_spawn_blocked_recv(void *arg) {
-  parallel_channel_s *ch = arg;
-  char *recvd;
-  parallel_channel_recv(ch, (void **)&recvd);
+spawn_blocked_recv(void *arg) {
+  one_chan_s * ch = arg;
+  char * recvd;
+  one_chan_recv(ch, (void **)&recvd);
 }
 
 TEST
 test_close_with_blocked_receiver() {
-  parallel_wait_group_s *wg = parallel_wait_group_new(0);
-  parallel_channel_s *ch = parallel_channel_new();
+  one_wait_group_s * wg = one_wait_group_new(0);
+  one_chan_s * ch = one_chan_new();
 
-  parallel_spawn_wg(wg, _spawn_blocked_recv, ch);
+  one_spawn_wg(wg, spawn_blocked_recv, ch);
   usleep(100000); // let spawned thread block on send
 
-  int err = parallel_channel_close(ch);
-  ERRFATAL(err, "parallel_channel_close");
+  int err = one_chan_close(ch);
+  ERRFATAL(err, "one_chan_close");
 
-  parallel_wait_group_wait(wg);
-  parallel_channel_free(ch);
-  parallel_wait_group_free(wg);
+  one_wait_group_wait(wg);
+  one_chan_free(ch);
+  one_wait_group_free(wg);
 
   PASS();
 }
 
 TEST
-test_channel_new() {
-  parallel_channel_s *ch = parallel_channel_new();
+test_chan_new() {
+  one_chan_s * ch = one_chan_new();
   ASSERT(ch);
-  parallel_channel_free(ch);
+  one_chan_free(ch);
 
   PASS();
 }
 
 TEST
-test_channel_close() {
-  parallel_channel_s *ch = parallel_channel_new();
-  int err = parallel_channel_close(ch);
+test_chan_close() {
+  one_chan_s * ch = one_chan_new();
+  int err = one_chan_close(ch);
   ASSERT_EQ(ESUCCESS, err);
 
-  parallel_channel_free(ch);
+  one_chan_free(ch);
 
   PASS();
 }
 
-SUITE(channel) {
-  RUN_TEST(test_channel_new);
-  RUN_TEST(test_channel_close);
+SUITE(chan) {
+  RUN_TEST(test_chan_new);
+  RUN_TEST(test_chan_close);
   RUN_TEST(test_send_recv);
   RUN_TEST(test_block_recv_multi_send);
   RUN_TEST(test_close_with_blocked_sender);

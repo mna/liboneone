@@ -1,14 +1,11 @@
-#include <unistd.h>
 #include <pthread.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <unistd.h>
 
-#include "parallel.h"
-#include "_errors.h"
+#include "oneone.h"
+#include "errors.h"
 
 static size_t
-_get_default_stack_size() {
+get_default_stack_size() {
   static size_t default_stack_size;
   if(default_stack_size) {
     return default_stack_size;
@@ -25,48 +22,48 @@ _get_default_stack_size() {
   return default_stack_size;
 }
 
-typedef struct _spawn_s {
+typedef struct spawn_s {
   void (*fn) (void *);
-  void *arg;
-  parallel_wait_group_s *wg;
-} _spawn_s;
+  void * arg;
+  one_wait_group_s *wg;
+} spawn_s;
 
 static void *
-_spawn_thunk(void *arg) {
-  _spawn_s *spawn = arg;
+spawn_thunk(void * arg) {
+  spawn_s *spawn = arg;
   if(spawn) {
-    parallel_wait_group_s *wg = spawn->wg;
+    one_wait_group_s *wg = spawn->wg;
     spawn->fn(spawn->arg);
     free(spawn);
 
     if(wg) {
-      parallel_wait_group_done(wg);
+      one_wait_group_done(wg);
     }
   }
   return NULL;
 }
 
 int
-parallel_spawn(void (*fn) (void *), void *arg) {
-  return parallel_spawn_wg_ssz(NULL, fn, arg, _get_default_stack_size());
+one_spawn(void (*fn) (void *), void * arg) {
+  return one_spawn_wg_ssz(NULL, fn, arg, get_default_stack_size());
 }
 
 int
-parallel_spawn_wg(parallel_wait_group_s *wg, void (*fn) (void *), void *arg) {
-  return parallel_spawn_wg_ssz(wg, fn, arg, _get_default_stack_size());
+one_spawn_wg(one_wait_group_s * const wg, void (*fn) (void *), void * arg) {
+  return one_spawn_wg_ssz(wg, fn, arg, get_default_stack_size());
 }
 
 int
-parallel_spawn_ssz(void (*fn) (void *), void *arg, size_t stack_sz) {
-  return parallel_spawn_wg_ssz(NULL, fn, arg, stack_sz);
+one_spawn_ssz(void (*fn) (void *), void * arg, size_t stack_sz) {
+  return one_spawn_wg_ssz(NULL, fn, arg, stack_sz);
 }
 
 int
-parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg, size_t stack_sz) {
+one_spawn_wg_ssz(one_wait_group_s * const wg, void (*fn) (void *), void * arg, size_t stack_sz) {
   pthread_attr_t attr;
   pthread_t t;
   int err = 0;
-  _spawn_s *spawn = NULL;
+  spawn_s * spawn = NULL;
 
   // configure the thread's stack size
   err = pthread_attr_init(&attr);
@@ -75,7 +72,7 @@ parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg,
   ERRCLEANUP(err, 1);
 
   // create the thunk to call fn with the signature expected by pthread
-  spawn = malloc(sizeof(_spawn_s));
+  spawn = malloc(sizeof(*spawn));
   NULLFATAL(spawn, "out of memory");
   spawn->fn = fn;
   spawn->arg = arg;
@@ -83,11 +80,11 @@ parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg,
 
   // at this point the wait group must be incremented
   if(wg) {
-    parallel_wait_group_add(wg, 1);
+    one_wait_group_add(wg, 1);
   }
 
   // create the detached thread
-  err = pthread_create(&t, &attr, _spawn_thunk, spawn);
+  err = pthread_create(&t, &attr, spawn_thunk, spawn);
   ERRCLEANUP(err, 2);
   err = pthread_detach(t);
   ERRFATAL(err, "pthread_detach");
@@ -98,7 +95,7 @@ parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg,
 error2:
   free(spawn);
   if(wg) {
-    parallel_wait_group_done(wg); // will not be called by thunk
+    one_wait_group_done(wg); // will not be called by thunk
   }
 error1:
   pthread_attr_destroy(&attr);

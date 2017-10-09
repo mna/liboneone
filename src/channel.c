@@ -1,7 +1,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "parallel.h"
+#include "oneone.h"
 #include "errors.h"
 
 typedef struct chan_waiter_s {
@@ -103,9 +103,9 @@ chan_waiter_block(chan_waiter_s * const w) {
   return value;
 }
 
-one_channel_s *
-one_channel_new() {
-  one_channel_s * ch = malloc(sizeof(one_channel_s));
+one_chan_s *
+one_chan_new() {
+  one_chan_s * ch = malloc(sizeof(*ch));
 
   ch->closed = false;
   ch->qsend = NULL;
@@ -118,7 +118,7 @@ one_channel_new() {
 }
 
 void
-parallel_channel_free(parallel_channel_s *ch) {
+one_chan_free(one_chan_s *ch) {
   if(!ch) {
     return;
   }
@@ -141,7 +141,7 @@ parallel_channel_free(parallel_channel_s *ch) {
 }
 
 int
-parallel_channel_send(parallel_channel_s *ch, void *value) {
+one_chan_send(one_chan_s * const ch, void * value) {
   int err = ESUCCESS;
 
   int merr = pthread_mutex_lock(&(ch->lock));
@@ -154,16 +154,16 @@ parallel_channel_send(parallel_channel_s *ch, void *value) {
 
   // if there is a receiver waiting, send the value immediately
   if(ch->qrecv) {
-    _channel_waiter_s *r = ch->qrecv;
+    chan_waiter_s * r = ch->qrecv;
     r->val = value;
     ch->qrecv = r->next;
-    _signal_waiter(r);
+    chan_waiter_signal(r);
     goto error1;
   }
 
   // otherwise add the sender to the waiting list
-  _channel_waiter_s *s = _new_waiter(value);
-  _append_waiter(&(ch->qsend), s);
+  chan_waiter_s * s = chan_waiter_new(value);
+  chan_waiter_append(&(ch->qsend), s);
 
   // unlock the channel
   merr = pthread_mutex_unlock(&(ch->lock));
@@ -175,7 +175,7 @@ parallel_channel_send(parallel_channel_s *ch, void *value) {
   // return a sentinel value (pointer to a static var) representing
   // closed channel. Can check here if it is that value and
   // return ECLOSEDCHAN.
-  _block_waiter(s);
+  chan_waiter_block(s);
   goto error0;
 
 error1:
@@ -186,7 +186,7 @@ error0:
 }
 
 int
-parallel_channel_recv(parallel_channel_s *ch, void **value) {
+one_chan_recv(one_chan_s * const ch, void ** value) {
   int err = ESUCCESS;
 
   int merr = pthread_mutex_lock(&(ch->lock));
@@ -199,16 +199,16 @@ parallel_channel_recv(parallel_channel_s *ch, void **value) {
 
   // if there is a sender waiting, receive the value immediately
   if(ch->qsend) {
-    _channel_waiter_s *s = ch->qsend;
+    chan_waiter_s * s = ch->qsend;
     *value = s->val;
     ch->qsend = s->next;
-    _signal_waiter(s);
+    chan_waiter_signal(s);
     goto error1;
   }
 
   // otherwise add the receiver to the waiting list
-  _channel_waiter_s *r = _new_waiter(NULL);
-  _append_waiter(&(ch->qrecv), r);
+  chan_waiter_s * r = chan_waiter_new(NULL);
+  chan_waiter_append(&(ch->qrecv), r);
 
   // unlock the channel
   merr = pthread_mutex_unlock(&(ch->lock));
@@ -220,7 +220,7 @@ parallel_channel_recv(parallel_channel_s *ch, void **value) {
   // return a sentinel value (pointer to a static var) representing
   // closed channel. Can check here if it is that value and
   // return ECLOSEDCHAN.
-  void *recvd = _block_waiter(r);
+  void * recvd = chan_waiter_block(r);
   *value = recvd;
 
   goto error0;
@@ -233,7 +233,7 @@ error0:
 }
 
 int
-parallel_channel_close(parallel_channel_s *ch) {
+one_chan_close(one_chan_s * const ch) {
   int err = ESUCCESS;
 
   // lock the channel
@@ -246,8 +246,8 @@ parallel_channel_close(parallel_channel_s *ch) {
   }
 
   ch->closed = true;
-  _channel_waiter_s *s = ch->qsend;
-  _channel_waiter_s *r = ch->qrecv;
+  chan_waiter_s * s = ch->qsend;
+  chan_waiter_s * r = ch->qrecv;
   ch->qsend = NULL;
   ch->qrecv = NULL;
 
@@ -256,11 +256,11 @@ parallel_channel_close(parallel_channel_s *ch) {
   ERRFATAL(merr, "pthread_mutex_unlock");
 
   // signal all waiters
-  for(_channel_waiter_s *w = s; w; w = w->next) {
-    _signal_waiter(w);
+  for(chan_waiter_s * w = s; w; w = w->next) {
+    chan_waiter_signal(w);
   }
-  for(_channel_waiter_s *w = r; w; w = w->next) {
-    _signal_waiter(w);
+  for(chan_waiter_s * w = r; w; w = w->next) {
+    chan_waiter_signal(w);
   }
 
   goto error0;

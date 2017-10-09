@@ -1,20 +1,17 @@
 #include <pthread.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
-#include "parallel.h"
-#include "_errors.h"
+#include "oneone.h"
+#include "errors.h"
 
-typedef struct parallel_wait_group_s {
+typedef struct one_wait_group_s {
   pthread_cond_t cond;
   pthread_mutex_t lock;
   int count;
-} parallel_wait_group_s;
+} one_wait_group_s;
 
-parallel_wait_group_s *
-parallel_wait_group_new(int initial_count) {
-  parallel_wait_group_s *wg = malloc(sizeof(parallel_wait_group_s));
+one_wait_group_s *
+one_wait_group_new(int initial_count) {
+  one_wait_group_s * wg = malloc(sizeof(*wg));
   NULLFATAL(wg, "out of memory");
 
   int err = 0;
@@ -32,7 +29,7 @@ parallel_wait_group_new(int initial_count) {
 }
 
 void
-parallel_wait_group_free(parallel_wait_group_s *wg) {
+one_wait_group_free(one_wait_group_s * const wg) {
   if(!wg) {
     return;
   }
@@ -47,7 +44,7 @@ parallel_wait_group_free(parallel_wait_group_s *wg) {
 }
 
 void
-parallel_wait_group_add(parallel_wait_group_s *wg, int delta) {
+one_wait_group_add(one_wait_group_s * const wg, int delta) {
   if(delta == 0) {
     return;
   }
@@ -70,12 +67,12 @@ parallel_wait_group_add(parallel_wait_group_s *wg, int delta) {
 }
 
 void
-parallel_wait_group_done(parallel_wait_group_s *wg) {
-  parallel_wait_group_add(wg, -1);
+one_wait_group_done(one_wait_group_s * const wg) {
+  one_wait_group_add(wg, -1);
 }
 
 void
-parallel_wait_group_wait(parallel_wait_group_s *wg) {
+one_wait_group_wait(one_wait_group_s * const wg) {
   int err = 0;
 
   err = pthread_mutex_lock(&(wg->lock));

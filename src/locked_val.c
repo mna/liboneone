@@ -1,19 +1,16 @@
-#include <stdio.h>
-#include <string.h>
 #include <pthread.h>
-#include <stdlib.h>
 
-#include "parallel.h"
-#include "_errors.h"
+#include "oneone.h"
+#include "errors.h"
 
-typedef struct parallel_locked_val_s {
+typedef struct one_locked_val_s {
   pthread_mutex_t lock;
   void *val;
-} parallel_locked_val_s;
+} one_locked_val_s;
 
-parallel_locked_val_s *
-parallel_locked_val_new(void *initial_val) {
-  parallel_locked_val_s *lv = malloc(sizeof(parallel_locked_val_s));
+one_locked_val_s *
+one_locked_val_new(void * initial_val) {
+  one_locked_val_s * lv = malloc(sizeof(*lv));
   NULLFATAL(lv, "out of memory");
 
   int err = pthread_mutex_init(&(lv->lock), NULL);
@@ -24,12 +21,12 @@ parallel_locked_val_new(void *initial_val) {
 }
 
 void *
-parallel_locked_val_free(parallel_locked_val_s *lv) {
+one_locked_val_free(one_locked_val_s * const lv) {
   if(!lv) {
     return NULL;
   }
 
-  void *val = lv->val;
+  void * val = lv->val;
   int err = pthread_mutex_destroy(&(lv->lock));
   ERRFATAL(err, "pthread_mutex_destroy");
 
@@ -38,13 +35,13 @@ parallel_locked_val_free(parallel_locked_val_s *lv) {
 }
 
 void *
-parallel_locked_val_set(parallel_locked_val_s *lv, void *new_val) {
+one_locked_val_set(one_locked_val_s * const lv, void * new_val) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));
   ERRFATAL(err, "pthread_mutex_lock");
 
-  void *old_val = lv->val;
+  void * old_val = lv->val;
   lv->val = new_val;
 
   err = pthread_mutex_unlock(&(lv->lock));
@@ -54,13 +51,13 @@ parallel_locked_val_set(parallel_locked_val_s *lv, void *new_val) {
 }
 
 void *
-parallel_locked_val_get(parallel_locked_val_s *lv) {
+one_locked_val_get(one_locked_val_s * const lv) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));
   ERRFATAL(err, "pthread_mutex_lock");
 
-  void *val = lv->val;
+  void * val = lv->val;
 
   err = pthread_mutex_unlock(&(lv->lock));
   ERRFATAL(err, "pthread_mutex_unlock");
@@ -69,14 +66,14 @@ parallel_locked_val_get(parallel_locked_val_s *lv) {
 }
 
 void *
-parallel_locked_val_with(parallel_locked_val_s *lv, parallel_locked_val_func fn) {
+one_locked_val_with(one_locked_val_s * const lv, one_locked_val_fn fn) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));
   ERRFATAL(err, "pthread_mutex_lock");
 
-  void *val = lv->val;
-  void *new_val = fn(val);
+  void * val = lv->val;
+  void * new_val = fn(val);
   lv->val = new_val;
 
   err = pthread_mutex_unlock(&(lv->lock));

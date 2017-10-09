@@ -1,22 +1,20 @@
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
-#include "../src/parallel.h"
+#include "../src/oneone.h"
 #include "../deps/greatest/greatest.h"
 
 static void
-_spawn(void *arg) {
-  parallel_locked_val_s *lv = arg;
-  int *val = parallel_locked_val_get(lv);
+spawn_change_val(void * arg) {
+  one_locked_val_s * lv = arg;
+  int * val = one_locked_val_get(lv);
   *val = 10;
 }
 
 TEST
 test_spawn() {
   int val = 1;
-  parallel_locked_val_s *lv = parallel_locked_val_new(&val);
-  parallel_spawn(_spawn, lv);
+  one_locked_val_s * lv = one_locked_val_new(&val);
+  one_spawn(spawn_change_val, lv);
 
   // TODO: better assert...
   usleep(1000);

@@ -16,7 +16,7 @@ typedef void (*one_locked_val_read_fn) (void * const);
 typedef struct one_locked_val_s one_locked_val_s;
 
 one_locked_val_s *
-onw_locked_val_new(void * const initial_val);
+one_locked_val_new(void * const initial_val);
 
 void *
 one_locked_val_free(one_locked_val_s *lv);
@@ -50,7 +50,7 @@ void *
 one_rwlocked_val_read_with(one_rwlocked_val_s * const rwlv, one_locked_val_read_fn fn);
 
 void *
-one_rwlocked_val_with(one_rwlocked_val_s * const rwlv, one_locked_val_func fn);
+one_rwlocked_val_with(one_rwlocked_val_s * const rwlv, one_locked_val_fn fn);
 
 // wait group
 
@@ -73,22 +73,22 @@ one_wait_group_wait(one_wait_group_s * const wg);
 
 // channel
 
-typedef struct one_channel_s one_channel_s;
+typedef struct one_chan_s one_chan_s;
 
-one_channel_s *
-one_channel_new();
+one_chan_s *
+one_chan_new();
 
 void
-one_channel_free(one_channel_s * const ch);
+one_chan_free(one_chan_s * const ch);
 
 int
-one_channel_send(one_channel_s * const ch, void * value);
+one_chan_send(one_chan_s * const ch, void * value);
 
 int
-one_channel_recv(one_channel_s * const ch, void ** value);
+one_chan_recv(one_chan_s * const ch, void ** value);
 
 int
-one_channel_close(one_channel_s * const ch);
+one_chan_close(one_chan_s * const ch);
 
 // spawn
 
