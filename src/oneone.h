@@ -76,7 +76,7 @@ one_wait_group_wait(one_wait_group_s * const wg);
 typedef struct one_chan_s one_chan_s;
 
 one_chan_s *
-one_chan_new();
+one_chan_new(void);
 
 void
 one_chan_free(one_chan_s * const ch);

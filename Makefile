@@ -1,16 +1,26 @@
 # compiler and linker flags
 CC ?= cc
-CFLAGS ?= -Wall -pedantic -Werror -g -std=c11
+CFLAGS ?= -Wall -Wextra -Wpedantic -Werror -g -std=c11
 LDLIBS ?=
 LDFLAGS ?=
+EXTRACFLAGS := -Wformat=2										\
+							 -Wshadow											\
+							 -Wredundant-decls						\
+							 -Wnested-externs							\
+							 -Wmissing-include-dirs
 
 # pathetic and lazy attempt to detect if the compiler is GCC
 GCCVERSION := $(shell $(CC) --version | grep ^gcc | sed 's/^.* //g')
 # See https://kristerw.blogspot.ca/2017/09/useful-gcc-warning-options-not-enabled.html
-CEXTRA_WARNINGS := -Wduplicated-cond -Wduplicated-branches -Wlogical-op -Wrestrict -Wnull-dereference -Wjump-misses-init -Wdouble-promotion -Wshadow -Wformat=2
+GCCEXTRA_WARNINGS := -Wduplicated-cond			\
+										 -Wduplicated-branches	\
+										 -Wlogical-op						\
+										 -Wrestrict							\
+										 -Wnull-dereference			\
+										 -Wdouble-promotion
 
 ifneq ($(GCCVERSION),)
-	CFLAGS += $(CEXTRA_WARNINGS)
+	CFLAGS += $(GCCEXTRA_WARNINGS)
 endif
 
 # TODO: try on Linux, doesn't work on macOS
@@ -30,7 +40,7 @@ DEPS_DIR := deps
 
 # list of source files for the project and dependencies
 ONEONE_CFILES := src/spawn.c src/locked_val.c src/rwlocked_val.c src/wait_group.c src/channel.c
-ONEONE_HFILES := src/oneone.h src/errors.h
+ONEONE_HFILES := src/oneone.h src/errors.h src/attributes.h
 TIMER_CFILES := $(DEPS_DIR)/timer/src/timer.c
 TEST_HFILES := $(ONEONE_HFILES) tests/suites.h
 TEST_CFILES := $(ONEONE_CFILES) $(TIMER_CFILES) tests/main.c tests/spawn.c tests/locked_val.c tests/rwlocked_val.c tests/wait_group.c tests/channel.c
@@ -45,7 +55,7 @@ list:
 
 # build test executable
 $(BUILD_DIR)/test: $(TEST_CFILES) $(TEST_HFILES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(TEST_CFILES) $(LDLIBS) -o $@
+	$(CC) $(CFLAGS) $(EXTRACFLAGS) $(LDFLAGS) $(TEST_CFILES) $(LDLIBS) -o $@
 
 # build and run test executable
 .PHONY: test

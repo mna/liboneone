@@ -1,5 +1,6 @@
 #include "../src/oneone.h"
 #include "../src/errors.h"
+#include "../src/attributes.h"
 
 #include "../deps/greatest/greatest.h"
 
@@ -48,7 +49,7 @@ test_locked_val_set() {
 }
 
 static void *
-with_locked_val(void * val) {
+with_locked_val(unused void * val) {
   int * new_val = malloc(sizeof(*new_val));
   NULLFATAL(new_val, "out of memory");
 

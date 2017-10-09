@@ -1,5 +1,6 @@
 #include "../src/oneone.h"
 #include "../src/errors.h"
+#include "../src/attributes.h"
 
 #include "../deps/greatest/greatest.h"
 
@@ -49,7 +50,7 @@ test_rwlocked_val_set() {
 }
 
 static void *
-with_rwlocked_val(void * val) {
+with_rwlocked_val(unused void * val) {
   int * new_val = malloc(sizeof(*new_val));
   NULLFATAL(new_val, "out of memory");
 
@@ -71,7 +72,7 @@ test_rwlocked_val_with() {
 }
 
 static void
-with_rdlocked_val(void *val) {
+with_rdlocked_val(unused void * val) {
 }
 
 TEST
