@@ -1,8 +1,7 @@
 #pragma once
 
-// Users must include:
-// #include <stdio.h>
-// #include <string.h>
+#include <stdio.h>
+#include <string.h>
 
 // FATAL prints msg and aborts unconditionnally.
 #define FATAL(msg)                   do {                                                   \

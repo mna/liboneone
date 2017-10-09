@@ -18,6 +18,7 @@ test_spawn() {
   parallel_locked_val_s *lv = parallel_locked_val_new(&val);
   parallel_spawn(_spawn, lv);
 
+  // TODO: better assert...
   usleep(1000);
   ASSERT_EQ(10, val);
 

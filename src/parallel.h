@@ -1,118 +1,116 @@
 #pragma once
 
-// Users must include:
-// #include <stdlib.h>
-
 #define _POSIX_C_SOURCE 200809L
+#include <stdlib.h>
 
-typedef enum parallel_error {
+typedef enum one_error_e {
   ESUCCESS = 0,
   ECLOSEDCHAN = -1,
-} parallel_error;
+} one_error_e;
 
-typedef void *(*parallel_locked_val_func) (void *);
-typedef void (*parallel_locked_rdval_func) (void *);
+typedef void * (*one_locked_val_fn) (void * const);
+typedef void (*one_locked_val_read_fn) (void * const);
 
 // locked value
 
-typedef struct parallel_locked_val_s parallel_locked_val_s;
+typedef struct one_locked_val_s one_locked_val_s;
 
-parallel_locked_val_s *
-parallel_locked_val_new(void *initial_val);
-
-void *
-parallel_locked_val_free(parallel_locked_val_s *lv);
+one_locked_val_s *
+onw_locked_val_new(void * const initial_val);
 
 void *
-parallel_locked_val_set(parallel_locked_val_s *lv, void *new_val);
+one_locked_val_free(one_locked_val_s *lv);
 
 void *
-parallel_locked_val_get(parallel_locked_val_s *lv);
+one_locked_val_set(one_locked_val_s * const lv, void * new_val);
 
 void *
-parallel_locked_val_with(parallel_locked_val_s *lv, parallel_locked_val_func fn);
+one_locked_val_get(one_locked_val_s * const lv);
+
+void *
+one_locked_val_with(one_locked_val_s * const lv, one_locked_val_fn fn);
 
 // rwlocked value
 
-typedef struct parallel_rwlocked_val_s parallel_rwlocked_val_s;
+typedef struct one_rwlocked_val_s one_rwlocked_val_s;
 
-parallel_rwlocked_val_s *
-parallel_rwlocked_val_new(void *initial_val);
-
-void *
-parallel_rwlocked_val_free(parallel_rwlocked_val_s *rwlv);
+one_rwlocked_val_s *
+one_rwlocked_val_new(void * const initial_val);
 
 void *
-parallel_rwlocked_val_set(parallel_rwlocked_val_s *rwlv, void *new_val);
+one_rwlocked_val_free(one_rwlocked_val_s * const rwlv);
 
 void *
-parallel_rwlocked_val_get(parallel_rwlocked_val_s *rwlv);
+one_rwlocked_val_set(one_rwlocked_val_s * const rwlv, void * new_val);
 
 void *
-parallel_rwlocked_val_rdwith(parallel_rwlocked_val_s *rwlv, parallel_locked_rdval_func fn);
+one_rwlocked_val_get(one_rwlocked_val_s * const rwlv);
 
 void *
-parallel_rwlocked_val_wrwith(parallel_rwlocked_val_s *rwlv, parallel_locked_val_func fn);
+one_rwlocked_val_read_with(one_rwlocked_val_s * const rwlv, one_locked_val_read_fn fn);
+
+void *
+one_rwlocked_val_with(one_rwlocked_val_s * const rwlv, one_locked_val_func fn);
 
 // wait group
 
-typedef struct parallel_wait_group_s parallel_wait_group_s;
+typedef struct one_wait_group_s one_wait_group_s;
 
-parallel_wait_group_s *
-parallel_wait_group_new(int initial_count);
-
-void
-parallel_wait_group_free(parallel_wait_group_s *wg);
+one_wait_group_s *
+one_wait_group_new(int initial_count);
 
 void
-parallel_wait_group_add(parallel_wait_group_s *wg, int delta);
+one_wait_group_free(one_wait_group_s * const wg);
 
 void
-parallel_wait_group_done(parallel_wait_group_s *wg);
+one_wait_group_add(one_wait_group_s * const wg, int delta);
 
 void
-parallel_wait_group_wait(parallel_wait_group_s *wg);
+one_wait_group_done(one_wait_group_s * const wg);
+
+void
+one_wait_group_wait(one_wait_group_s * const wg);
 
 // channel
 
-typedef struct parallel_channel_s parallel_channel_s;
+typedef struct one_channel_s one_channel_s;
 
-parallel_channel_s *
-parallel_channel_new();
+one_channel_s *
+one_channel_new();
 
 void
-parallel_channel_free(parallel_channel_s *ch);
+one_channel_free(one_channel_s * const ch);
 
 int
-parallel_channel_send(parallel_channel_s *ch, void *value);
+one_channel_send(one_channel_s * const ch, void * value);
 
 int
-parallel_channel_recv(parallel_channel_s *ch, void **value);
+one_channel_recv(one_channel_s * const ch, void ** value);
 
 int
-parallel_channel_close(parallel_channel_s *ch);
+one_channel_close(one_channel_s * const ch);
 
 // spawn
 
 /*
- * parallel_spawn launches a new thread in "fire and forget" mode
+ * one_spawn launches a new thread in "fire and forget" mode
  * (i.e. detached state) to run the provided function. The arg
  * is passed to the function as argument, it can be NULL.
  * It returns 0 on success, the pthread error number on error.
 */
 int
-parallel_spawn(void (*fn) (void *), void *arg);
+one_spawn(void (*fn) (void *), void * arg);
 
 /*
- * parallel_spawn_ssz is identical to parallel_spawn except that the thread's
+ * one_spawn_ssz is identical to one_spawn except that the thread's
  * stack size can be specified.
 */
 int
-parallel_spawn_ssz(void (*fn) (void *), void *arg, size_t stack_sz);
+one_spawn_ssz(void (*fn) (void *), void * arg, size_t stack_sz);
 
 int
-parallel_spawn_wg(parallel_wait_group_s *wg, void (*fn) (void *), void *arg);
+one_spawn_wg(one_wait_group_s * const wg, void (*fn) (void *), void * arg);
 
 int
-parallel_spawn_wg_ssz(parallel_wait_group_s *wg, void (*fn) (void *), void *arg, size_t stack_sz);
+one_spawn_wg_ssz(one_wait_group_s * const wg, void (*fn) (void *), void * arg, size_t stack_sz);
 

@@ -1,31 +1,29 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <pthread.h>
 #include <stdbool.h>
 
 #include "parallel.h"
-#include "_errors.h"
+#include "errors.h"
 
-typedef struct _channel_waiter_s {
+typedef struct chan_waiter_s {
   pthread_mutex_t lock;
   pthread_cond_t cond;
   bool signaled;
-  void *val;
-  struct _channel_waiter_s *next;
-} _channel_waiter_s;
+  void * val;
+  struct chan_waiter_s *next;
+} chan_waiter_s;
 
-typedef struct parallel_channel_s {
+typedef struct one_chan_s {
   pthread_mutex_t lock;
   bool closed;
-  _channel_waiter_s *qsend;
-  _channel_waiter_s *qrecv;
-} parallel_channel_s;
+  chan_waiter_s *qsend;
+  chan_waiter_s *qrecv;
+} one_chan_s;
 
-static _channel_waiter_s *
-_new_waiter(void *value) {
-  _channel_waiter_s *w = malloc(sizeof(_channel_waiter_s));
+static chan_waiter_s *
+chan_waiter_new(void * value) {
+  chan_waiter_s * const w = malloc(sizeof(*w));
   NULLFATAL(w, "out of memory");
+
   w->signaled = false;
   w->val = value;
   w->next = NULL;
@@ -41,7 +39,7 @@ _new_waiter(void *value) {
 }
 
 static void
-_free_waiter(_channel_waiter_s *w) {
+chan_waiter_free(chan_waiter_s * const w) {
   if(!w) {
     return;
   }
@@ -55,20 +53,20 @@ _free_waiter(_channel_waiter_s *w) {
 }
 
 static void
-_append_waiter(_channel_waiter_s **list, _channel_waiter_s *w) {
-  if(!*list) {
+chan_waiter_append(chan_waiter_s ** list, chan_waiter_s * const w) {
+  if(!(*list)) {
     *list = w;
     return;
   }
 
-  _channel_waiter_s *p;
+  chan_waiter_s *p;
   for (p = *list; p->next; p = p->next)
     ;
   p->next = w;
 }
 
 static void
-_signal_waiter(_channel_waiter_s *w) {
+chan_waiter_signal(chan_waiter_s * const w) {
   int err = 0;
 
   err = pthread_mutex_lock(&(w->lock));
@@ -84,7 +82,7 @@ _signal_waiter(_channel_waiter_s *w) {
 }
 
 static void *
-_block_waiter(_channel_waiter_s *w) {
+chan_waiter_block(chan_waiter_s * const w) {
   int err = 0;
 
   err = pthread_mutex_lock(&(w->lock));
@@ -95,19 +93,20 @@ _block_waiter(_channel_waiter_s *w) {
     ERRFATAL(err, "pthread_cond_wait");
   }
 
-  void *value = w->val;
+  void * value = w->val;
   err = pthread_mutex_unlock(&(w->lock));
   ERRFATAL(err, "pthread_mutex_unlock");
 
   // waiter is removed from the channel's queue already, only
   // needs to be freed.
-  _free_waiter(w);
+  chan_waiter_free(w);
   return value;
 }
 
-parallel_channel_s *
-parallel_channel_new() {
-  parallel_channel_s *ch = malloc(sizeof(parallel_channel_s));
+one_channel_s *
+one_channel_new() {
+  one_channel_s * ch = malloc(sizeof(one_channel_s));
+
   ch->closed = false;
   ch->qsend = NULL;
   ch->qrecv = NULL;
