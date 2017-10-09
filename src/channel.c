@@ -118,7 +118,7 @@ one_chan_new() {
 }
 
 void
-one_chan_free(one_chan_s *ch) {
+one_chan_free(one_chan_s * const ch) {
   if(!ch) {
     return;
   }

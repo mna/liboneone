@@ -19,10 +19,10 @@ one_locked_val_s *
 one_locked_val_new(void * const initial_val);
 
 void *
-one_locked_val_free(one_locked_val_s *lv);
+one_locked_val_free(one_locked_val_s * const lv);
 
 void *
-one_locked_val_set(one_locked_val_s * const lv, void * new_val);
+one_locked_val_set(one_locked_val_s * const lv, void * const new_val);
 
 void *
 one_locked_val_get(one_locked_val_s * const lv);
@@ -41,7 +41,7 @@ void *
 one_rwlocked_val_free(one_rwlocked_val_s * const rwlv);
 
 void *
-one_rwlocked_val_set(one_rwlocked_val_s * const rwlv, void * new_val);
+one_rwlocked_val_set(one_rwlocked_val_s * const rwlv, void * const new_val);
 
 void *
 one_rwlocked_val_get(one_rwlocked_val_s * const rwlv);

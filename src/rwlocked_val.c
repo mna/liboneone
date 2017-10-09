@@ -9,7 +9,7 @@ typedef struct one_rwlocked_val_s {
 } one_rwlocked_val_s;
 
 one_rwlocked_val_s *
-one_rwlocked_val_new(void * initial_val) {
+one_rwlocked_val_new(void * const initial_val) {
   one_rwlocked_val_s * rwlv = malloc(sizeof(*rwlv));
   NULLFATAL(rwlv, "out of memory");
 
@@ -35,7 +35,7 @@ one_rwlocked_val_free(one_rwlocked_val_s * const rwlv) {
 }
 
 void *
-one_rwlocked_val_set(one_rwlocked_val_s * const rwlv, void * new_val) {
+one_rwlocked_val_set(one_rwlocked_val_s * const rwlv, void * const new_val) {
   int err = 0;
 
   err = pthread_rwlock_wrlock(&(rwlv->lock));

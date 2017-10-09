@@ -9,7 +9,7 @@ typedef struct one_locked_val_s {
 } one_locked_val_s;
 
 one_locked_val_s *
-one_locked_val_new(void * initial_val) {
+one_locked_val_new(void * const initial_val) {
   one_locked_val_s * lv = malloc(sizeof(*lv));
   NULLFATAL(lv, "out of memory");
 
@@ -35,7 +35,7 @@ one_locked_val_free(one_locked_val_s * const lv) {
 }
 
 void *
-one_locked_val_set(one_locked_val_s * const lv, void * new_val) {
+one_locked_val_set(one_locked_val_s * const lv, void * const new_val) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));
