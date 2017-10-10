@@ -1,4 +1,4 @@
-#include "../deps/greatest/greatest.h"
+#include "greatest/greatest.h"
 
 SUITE_EXTERN(spawn);
 SUITE_EXTERN(locked_val);

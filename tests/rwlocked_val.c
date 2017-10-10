@@ -1,8 +1,7 @@
-#include "../src/oneone.h"
-#include "../src/errors.h"
-#include "../src/attributes.h"
-
-#include "../deps/greatest/greatest.h"
+#include "oneone.h"
+#include "errors.h"
+#include "attributes.h"
+#include "greatest/greatest.h"
 
 TEST
 test_rwlocked_val_new() {

@@ -1,0 +1,6 @@
+#pragma once
+
+#define oneone_VERSION_MAJOR @oneone_VERSION_MAJOR@
+#define oneone_VERSION_MINOR @oneone_VERSION_MINOR@
+#define oneone_VERSION_PATCH @oneone_VERSION_PATCH@
+

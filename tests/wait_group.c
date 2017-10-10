@@ -1,9 +1,8 @@
 #include <unistd.h>
 
-#include "../src/oneone.h"
-
-#include "../deps/timer/src/timer.h"
-#include "../deps/greatest/greatest.h"
+#include "oneone.h"
+#include "timer/src/timer.h"
+#include "greatest/greatest.h"
 
 long sleep_before_done = 1000;
 

@@ -1,9 +1,8 @@
 #include <unistd.h>
 
-#include "../src/oneone.h"
-#include "../src/errors.h"
-
-#include "../deps/greatest/greatest.h"
+#include "oneone.h"
+#include "errors.h"
+#include "greatest/greatest.h"
 
 static void
 spawn_chan(void *arg) {

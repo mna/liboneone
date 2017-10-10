@@ -1,8 +1,7 @@
 #include <stdlib.h>
 
-#include "../src/oneone.h"
-
-#include "../deps/greatest/greatest.h"
+#include "oneone.h"
+#include "greatest/greatest.h"
 #include "suites.h"
 
 GREATEST_MAIN_DEFS();

@@ -3,7 +3,7 @@ CC ?= cc
 CFLAGS ?= -Wall -Wextra -Wpedantic -Werror -g -std=c11
 LDLIBS ?=
 LDFLAGS ?=
-EXTRACFLAGS := -Wformat=2										\
+EXTRA_CFLAGS := -Wformat=2										\
 							 -Wshadow											\
 							 -Wredundant-decls						\
 							 -Wnested-externs							\
@@ -45,6 +45,8 @@ TIMER_CFILES := $(DEPS_DIR)/timer/src/timer.c
 TEST_HFILES := $(ONEONE_HFILES) tests/suites.h
 TEST_CFILES := $(ONEONE_CFILES) $(TIMER_CFILES) tests/main.c tests/spawn.c tests/locked_val.c tests/rwlocked_val.c tests/wait_group.c tests/channel.c
 
+STATIC_LIB := $(BUILD_DIR)/liboneone.a
+
 # default make target if none is specified.
 .DEFAULT_GOAL := list
 
@@ -55,7 +57,7 @@ list:
 
 # build test executable
 $(BUILD_DIR)/test: $(TEST_CFILES) $(TEST_HFILES)
-	$(CC) $(CFLAGS) $(EXTRACFLAGS) $(LDFLAGS) $(TEST_CFILES) $(LDLIBS) -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) $(LDFLAGS) $(TEST_CFILES) $(LDLIBS) -o $@
 
 # build and run test executable
 .PHONY: test

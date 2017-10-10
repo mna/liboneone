@@ -1,7 +1,7 @@
 #include <unistd.h>
 
-#include "../src/oneone.h"
-#include "../deps/greatest/greatest.h"
+#include "oneone.h"
+#include "greatest/greatest.h"
 
 static void
 spawn_change_val(void * arg) {
