@@ -3,6 +3,16 @@
 
 #include "oneone.h"
 #include "errors.h"
+#include "config.h"
+
+one_version_s
+one_version() {
+  return (one_version_s) {
+    .major = oneone_VERSION_MAJOR,
+    .minor = oneone_VERSION_MINOR,
+    .patch = oneone_VERSION_PATCH,
+  };
+}
 
 static size_t
 get_default_stack_size() {

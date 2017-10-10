@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 project(oneone VERSION 0.1.0 LANGUAGES C)
 
-# TODO: actually expose the version via a func
 configure_file(
   "${PROJECT_SOURCE_DIR}/config.h.in"
   "${PROJECT_BINARY_DIR}/config.h"
@@ -36,10 +35,12 @@ endif()
 
 option(BUILD_SHARED_LIBS "build as a shared library" OFF)
 
-# define the main oneone target
-add_library(
-  oneone
+# source files for the oneone library
+set(
+  oneone_cfiles
 
+  # NOTE: do not automate listing via a file(GLOB ...) command, as
+  # this breaks cmake's ability to detect changes.
   channel.c
   locked_val.c
   rwlocked_val.c
@@ -47,9 +48,21 @@ add_library(
   wait_group.c
 )
 
+# define the main oneone target
+add_library(
+  oneone
+
+  ${oneone_cfiles}
+)
+
 # add the tests
 add_subdirectory(tests)
 
 install(TARGETS oneone DESTINATION bin)
 install(FILES oneone.h DESTINATION include)
+
+add_custom_target(
+  # cannot use `test` as target, reserved for CTest
+  unit_tests COMMAND oneonetest -v | ${PROJECT_SOURCE_DIR}/deps/greatest/contrib/greenest
+)
 

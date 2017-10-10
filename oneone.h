@@ -114,3 +114,14 @@ one_spawn_wg(one_wait_group_s * const wg, void (*fn) (void *), void * arg);
 int
 one_spawn_wg_ssz(one_wait_group_s * const wg, void (*fn) (void *), void * arg, size_t stack_sz);
 
+// version
+
+typedef struct one_version_s {
+  int major;
+  int minor;
+  int patch;
+} one_version_s;
+
+one_version_s
+one_version(void);
+

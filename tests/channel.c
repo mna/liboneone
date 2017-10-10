@@ -68,7 +68,7 @@ test_block_recv_multi_send() {
 
   one_spawn_wg(wg, spawn_senda, ch);
   one_spawn_wg(wg, spawn_sendb, ch);
-  usleep(100000); // let spawned threads block on send
+  usleep(10000); // let spawned threads block on send
 
   char * recvd;
   int err = one_chan_recv(ch, (void **)&recvd);
@@ -99,7 +99,7 @@ test_close_with_blocked_sender() {
   one_chan_s * ch = one_chan_new();
 
   one_spawn_wg(wg, spawn_blocked_send, ch);
-  usleep(100000); // let spawned thread block on send
+  usleep(10000); // let spawned thread block on send
 
   int err = one_chan_close(ch);
   ERRFATAL(err, "one_chan_close");
@@ -124,7 +124,7 @@ test_close_with_blocked_receiver() {
   one_chan_s * ch = one_chan_new();
 
   one_spawn_wg(wg, spawn_blocked_recv, ch);
-  usleep(100000); // let spawned thread block on send
+  usleep(10000); // let spawned thread block on send
 
   int err = one_chan_close(ch);
   ERRFATAL(err, "one_chan_close");
