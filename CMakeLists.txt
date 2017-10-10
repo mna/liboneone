@@ -7,6 +7,31 @@ configure_file(
 )
 include_directories("${PROJECT_BINARY_DIR}")
 
+add_compile_options(
+  -Wall
+  -Wextra
+  -Wpedantic
+  -Werror
+  -g
+  -std=c11
+  -Wformat=2
+  -Wshadow
+  -Wredundant-decls
+  -Wnested-externs
+  -Wmissing-include-dirs
+)
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+  add_compile_options(
+    -Wduplicated-cond
+    -Wduplicated-branches
+    -Wlogical-op
+    -Wrestrict
+    -Wnull-dereference
+    -Wdouble-promotion
+  )
+endif()
+
 option(BUILD_SHARED_LIBS "build as a shared library" OFF)
 
 add_library(
