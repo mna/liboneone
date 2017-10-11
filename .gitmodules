@@ -7,3 +7,6 @@
 [submodule "deps/socket99"]
 	path = deps/socket99
 	url = https://github.com/silentbicycle/socket99.git
+[submodule "deps/vector.h"]
+	path = deps/vector.h
+	url = https://github.com/swenson/vector.h.git

@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 // FATAL prints msg and aborts unconditionnally.
 #define FATAL(msg)                   do {                                                   \
@@ -33,7 +34,7 @@
 // NEGFATAL prints msg and aborts if intVal is negative.
 #define NEGFATAL(intVal, msg)       do {                                                    \
                                         if((intVal) < 0) {                                  \
-                                          printf("%s\n", (msg));                            \
+                                          printf("%s: %s\n", (msg), strerror(errno));       \
                                           abort();                                          \
                                         }                                                   \
                                       } while(0);
