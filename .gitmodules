@@ -7,3 +7,6 @@
 [submodule "deps/socket99"]
 	path = deps/socket99
 	url = https://github.com/silentbicycle/socket99.git
+[submodule "deps/vec"]
+	path = deps/vec
+	url = https://github.com/rxi/vec.git
