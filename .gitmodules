@@ -4,3 +4,6 @@
 [submodule "deps/timer"]
 	path = deps/timer
 	url = https://github.com/clibs/timer.git
+[submodule "deps/socket99"]
+	path = deps/socket99
+	url = https://github.com/silentbicycle/socket99.git
