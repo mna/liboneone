@@ -90,7 +90,10 @@ test_block_recv_multi_send() {
 static void
 spawn_blocked_send(void * arg) {
   one_chan_s * ch = arg;
-  one_chan_send(ch, "a");
+  int err = one_chan_send(ch, "a");
+  if(err != ECLOSEDCHAN) {
+    FATAL("one_chan_send: want ECLOSEDCHAN");
+  }
 }
 
 TEST
@@ -102,7 +105,7 @@ test_close_with_blocked_sender() {
   usleep(10000); // let spawned thread block on send
 
   int err = one_chan_close(ch);
-  ERRFATAL(err, "one_chan_close");
+  ASSERT_EQ(ESUCCESS, err);
 
   one_wait_group_wait(wg);
   one_chan_free(ch);
@@ -115,7 +118,13 @@ static void
 spawn_blocked_recv(void *arg) {
   one_chan_s * ch = arg;
   char * recvd;
-  one_chan_recv(ch, (void **)&recvd);
+  int err = one_chan_recv(ch, (void **)&recvd);
+  if(recvd != NULL) {
+    FATAL("one_chan_recv: want NULL value");
+  }
+  if(err != ECLOSEDCHAN) {
+    FATAL("one_chan_recv: want ECLOSEDCHAN");
+  }
 }
 
 TEST
@@ -127,11 +136,25 @@ test_close_with_blocked_receiver() {
   usleep(10000); // let spawned thread block on send
 
   int err = one_chan_close(ch);
-  ERRFATAL(err, "one_chan_close");
+  ASSERT_EQ(ESUCCESS, err);
 
   one_wait_group_wait(wg);
   one_chan_free(ch);
   one_wait_group_free(wg);
+
+  PASS();
+}
+
+TEST
+test_double_close() {
+  one_chan_s * ch = one_chan_new();
+
+  int err = one_chan_close(ch);
+  ASSERT_EQ(ESUCCESS, err);
+  err = one_chan_close(ch);
+  ASSERT_EQ(ECLOSEDCHAN, err);
+
+  one_chan_free(ch);
 
   PASS();
 }
@@ -163,5 +186,6 @@ SUITE(chan) {
   RUN_TEST(test_block_recv_multi_send);
   RUN_TEST(test_close_with_blocked_sender);
   RUN_TEST(test_close_with_blocked_receiver);
+  RUN_TEST(test_double_close);
 }
 

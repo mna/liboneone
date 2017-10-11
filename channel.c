@@ -4,10 +4,16 @@
 #include "oneone.h"
 #include "errors.h"
 
+typedef enum waiter_signaled_e {
+  ws_false = 0,
+  ws_true = 1,
+  ws_closed = 99,
+} waiter_signaled_e;
+
 typedef struct chan_waiter_s {
   pthread_mutex_t lock;
   pthread_cond_t cond;
-  bool signaled;
+  waiter_signaled_e signaled;
   void * val;
   struct chan_waiter_s *next;
 } chan_waiter_s;
@@ -24,7 +30,7 @@ chan_waiter_new(void * value) {
   chan_waiter_s * const w = malloc(sizeof(*w));
   NULLFATAL(w, "out of memory");
 
-  w->signaled = false;
+  w->signaled = ws_false;
   w->val = value;
   w->next = NULL;
 
@@ -66,13 +72,13 @@ chan_waiter_append(chan_waiter_s ** list, chan_waiter_s * const w) {
 }
 
 static void
-chan_waiter_signal(chan_waiter_s * const w) {
+chan_waiter_signal(chan_waiter_s * const w, bool chan_closed) {
   int err = 0;
 
   err = pthread_mutex_lock(&(w->lock));
   ERRFATAL(err, "pthread_mutex_lock");
 
-  w->signaled = true;
+  w->signaled = chan_closed ? ws_closed : ws_true;
 
   err = pthread_cond_signal(&(w->cond));
   ERRFATAL(err, "pthread_cond_signal");
@@ -157,7 +163,7 @@ one_chan_send(one_chan_s * const ch, void * value) {
     chan_waiter_s * r = ch->qrecv;
     r->val = value;
     ch->qrecv = r->next;
-    chan_waiter_signal(r);
+    chan_waiter_signal(r, false);
     goto error1;
   }
 
@@ -170,12 +176,10 @@ one_chan_send(one_chan_s * const ch, void * value) {
   ERRFATAL(merr, "pthread_mutex_unlock");
 
   // block the send waiter until a receiver is ready
-  // TODO: should return an int err and set value on an arg.
-  // or (because _block_waiter cannot check closed on channel),
-  // return a sentinel value (pointer to a static var) representing
-  // closed channel. Can check here if it is that value and
-  // return ECLOSEDCHAN.
   chan_waiter_block(s);
+  if(s->signaled == ws_closed) {
+    err = ECLOSEDCHAN;
+  }
   goto error0;
 
 error1:
@@ -202,7 +206,7 @@ one_chan_recv(one_chan_s * const ch, void ** value) {
     chan_waiter_s * s = ch->qsend;
     *value = s->val;
     ch->qsend = s->next;
-    chan_waiter_signal(s);
+    chan_waiter_signal(s, false);
     goto error1;
   }
 
@@ -215,13 +219,12 @@ one_chan_recv(one_chan_s * const ch, void ** value) {
   ERRFATAL(merr, "pthread_mutex_unlock");
 
   // block the receive waiter until a sender is ready
-  // TODO: should return an int err and set value on an arg.
-  // or (because _block_waiter cannot check closed on channel),
-  // return a sentinel value (pointer to a static var) representing
-  // closed channel. Can check here if it is that value and
-  // return ECLOSEDCHAN.
   void * recvd = chan_waiter_block(r);
   *value = recvd;
+  if(r->signaled == ws_closed) {
+    err = ECLOSEDCHAN;
+    *value = NULL;
+  }
 
   goto error0;
 
@@ -257,10 +260,10 @@ one_chan_close(one_chan_s * const ch) {
 
   // signal all waiters
   for(chan_waiter_s * w = s; w; w = w->next) {
-    chan_waiter_signal(w);
+    chan_waiter_signal(w, true);
   }
   for(chan_waiter_s * w = r; w; w = w->next) {
-    chan_waiter_signal(w);
+    chan_waiter_signal(w, true);
   }
 
   goto error0;
