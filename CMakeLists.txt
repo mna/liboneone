@@ -55,8 +55,9 @@ add_library(
   ${oneone_cfiles}
 )
 
-# add the tests
+# add the tests and cmds
 add_subdirectory(tests)
+add_subdirectory(cmd/echosrv)
 
 # configure the installation of the library
 install(TARGETS oneone DESTINATION bin)
