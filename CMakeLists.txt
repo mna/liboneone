@@ -58,9 +58,12 @@ add_library(
 # add the tests
 add_subdirectory(tests)
 
+# configure the installation of the library
 install(TARGETS oneone DESTINATION bin)
 install(FILES oneone.h DESTINATION include)
 
+# use a custom target to run tests (do not use CTest, I want to keep
+# using greatest with its colored output).
 add_custom_target(
   # cannot use `test` as target, reserved for CTest
   unit_tests COMMAND oneonetest -v | ${PROJECT_SOURCE_DIR}/deps/greatest/contrib/greenest

@@ -31,5 +31,4 @@ add_executable(
   ${timerdep_cfiles}
 )
 target_link_libraries(oneonetest oneone)
-add_dependencies(oneonetest oneone)
 
