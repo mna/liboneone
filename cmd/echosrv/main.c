@@ -13,30 +13,6 @@
 // set in signal handlers to signal graceful termination of server.
 static bool stop_server = false;
 
-// serves a single client in a thread.
-void
-serve_client(void * arg) {
-  int * pfd = arg;
-  char buf[100];
-  int n = 1;
-
-  printf("serving %d\n", *pfd);
-  while(true) {
-    n = read(*pfd, buf, sizeof(buf));
-    NEGFATAL(n, "read");
-    if(n == 0) {
-      break;
-    }
-
-    n = write(*pfd, buf, n);
-    NEGFATAL(n, "write");
-  }
-
-  printf("closing %d\n", *pfd);
-  close(*pfd);
-  free(pfd);
-}
-
 void
 signal_handler(unused int signal) {
   stop_server = true;
@@ -51,6 +27,70 @@ register_signal_handlers() {
 
   int err = sigaction(SIGINT, &sa, NULL);
   NEGFATAL(err, "sigaction");
+}
+
+void *
+push_client_fd(void * val, void * const arg) {
+  vec_int_t * vec = val;
+  int * pfd = arg;
+
+  vec_push(vec, *pfd);
+  return vec;
+}
+
+void *
+pop_client_fd(void * val, void * const arg) {
+  vec_int_t * vec = val;
+  int * pfd = arg;
+
+  vec_remove(vec, *pfd);
+  return vec;
+}
+
+typedef struct client_arg_s {
+  int fd;
+  one_locked_val_s * locked_vec;
+} client_arg_s;
+
+// serves a single client in a thread.
+void
+serve_client(void * arg) {
+  client_arg_s * ca = arg;
+
+  char buf[100];
+  int n = 1;
+
+  printf("serving %d\n", ca->fd);
+  one_locked_val_with(ca->locked_vec, push_client_fd, &(ca->fd));
+
+  while(true) {
+    n = read(ca->fd, buf, sizeof(buf));
+    NEGFATAL(n, "read");
+    if(n == 0) {
+      break;
+    }
+
+    n = write(ca->fd, buf, n);
+    NEGFATAL(n, "write");
+  }
+
+  printf("closing %d\n", ca->fd);
+  close(ca->fd);
+  one_locked_val_with(ca->locked_vec, pop_client_fd, &(ca->fd));
+  free(ca);
+}
+
+void *
+shutdown_client_fds(void * val, unused void * const arg) {
+  vec_int_t * vec = val;
+
+  int i; int v;
+  vec_foreach(vec, v, i) {
+    int err = shutdown(v, SHUT_RD);
+    NEGFATAL(err, "shutdown");
+  }
+
+  return vec;
 }
 
 int
@@ -82,6 +122,7 @@ main(unused int argc, unused char ** argv) {
   vec_int_t vec;
   vec_init(&vec);
 
+  one_locked_val_s * locked_vec = one_locked_val_new(&vec);
   one_wait_group_s * wg = one_wait_group_new(0);
 
   while(!stop_server) {
@@ -93,24 +134,20 @@ main(unused int argc, unused char ** argv) {
     }
     NEGFATAL(client_fd, "accept");
 
-    vec_push(&vec, client_fd);
+    client_arg_s * arg = malloc(sizeof(*arg));
+    arg->fd = client_fd;
+    arg->locked_vec = locked_vec;
 
-    int * pfd = malloc(sizeof(*pfd));
-    *pfd = client_fd;
-    int err = one_spawn_wg(wg, serve_client, pfd);
+    int err = one_spawn_wg(wg, serve_client, arg);
     ERRFATAL(err, "one_spawn_wg");
   }
   close(res.fd);
 
-  // TODO: threads must remove FD from vector when closed from client side
-  int i; int val;
-  vec_foreach(&vec, val, i) {
-    int err = shutdown(val, SHUT_RD);
-    NEGFATAL(err, "shutdown");
-  }
+  one_locked_val_with(locked_vec, shutdown_client_fds, NULL);
 
-  vec_deinit(&vec);
   one_wait_group_wait(wg);
   one_wait_group_free(wg);
+  one_locked_val_free(locked_vec);
+  vec_deinit(&vec);
 }
 

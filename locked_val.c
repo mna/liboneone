@@ -66,14 +66,14 @@ one_locked_val_get(one_locked_val_s * const lv) {
 }
 
 void *
-one_locked_val_with(one_locked_val_s * const lv, one_locked_val_fn fn) {
+one_locked_val_with(one_locked_val_s * const lv, one_locked_val_fn fn, void * const arg) {
   int err = 0;
 
   err = pthread_mutex_lock(&(lv->lock));
   ERRFATAL(err, "pthread_mutex_lock");
 
   void * val = lv->val;
-  void * new_val = fn(val);
+  void * new_val = fn(val, arg);
   lv->val = new_val;
 
   err = pthread_mutex_unlock(&(lv->lock));

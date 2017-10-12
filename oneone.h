@@ -8,8 +8,8 @@ typedef enum one_error_e {
   ECLOSEDCHAN = -1,
 } one_error_e;
 
-typedef void * (*one_locked_val_fn) (void * const);
-typedef void (*one_locked_val_read_fn) (void * const);
+typedef void * (*one_locked_val_fn) (void * const val, void * const arg);
+typedef void (*one_locked_val_read_fn) (void * const val, void * const arg);
 
 // locked value
 
@@ -28,7 +28,7 @@ void *
 one_locked_val_get(one_locked_val_s * const lv);
 
 void *
-one_locked_val_with(one_locked_val_s * const lv, one_locked_val_fn fn);
+one_locked_val_with(one_locked_val_s * const lv, one_locked_val_fn fn, void * const arg);
 
 // rwlocked value
 
@@ -47,10 +47,10 @@ void *
 one_rwlocked_val_get(one_rwlocked_val_s * const rwlv);
 
 void *
-one_rwlocked_val_read_with(one_rwlocked_val_s * const rwlv, one_locked_val_read_fn fn);
+one_rwlocked_val_read_with(one_rwlocked_val_s * const rwlv, one_locked_val_read_fn fn, void * const arg);
 
 void *
-one_rwlocked_val_with(one_rwlocked_val_s * const rwlv, one_locked_val_fn fn);
+one_rwlocked_val_with(one_rwlocked_val_s * const rwlv, one_locked_val_fn fn, void * const arg);
 
 // wait group
 

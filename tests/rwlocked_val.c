@@ -49,7 +49,7 @@ test_rwlocked_val_set() {
 }
 
 static void *
-with_rwlocked_val(unused void * val) {
+with_rwlocked_val(unused void * val, unused void * const arg) {
   int * new_val = malloc(sizeof(*new_val));
   NULLFATAL(new_val, "out of memory");
 
@@ -61,7 +61,7 @@ TEST
 test_rwlocked_val_with() {
   char * initial_value = "init";
   one_rwlocked_val_s * rwlv = one_rwlocked_val_new(initial_value);
-  int * new_val = one_rwlocked_val_with(rwlv, with_rwlocked_val);
+  int * new_val = one_rwlocked_val_with(rwlv, with_rwlocked_val, NULL);
   ASSERT_EQ(100, *new_val);
 
   one_rwlocked_val_free(rwlv);
@@ -71,14 +71,14 @@ test_rwlocked_val_with() {
 }
 
 static void
-with_rdlocked_val(unused void * val) {
+with_rdlocked_val(unused void * val, unused void * const arg) {
 }
 
 TEST
 test_rwlocked_val_read_with() {
   int initial_value = 1;
   one_rwlocked_val_s * rwlv = one_rwlocked_val_new(&initial_value);
-  int * val = one_rwlocked_val_read_with(rwlv, with_rdlocked_val);
+  int * val = one_rwlocked_val_read_with(rwlv, with_rdlocked_val, NULL);
   ASSERT_EQ(initial_value, *val);
 
   one_rwlocked_val_free(rwlv);

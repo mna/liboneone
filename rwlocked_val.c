@@ -66,14 +66,14 @@ one_rwlocked_val_get(one_rwlocked_val_s * const rwlv) {
 }
 
 void *
-one_rwlocked_val_read_with(one_rwlocked_val_s * const rwlv, one_locked_val_read_fn fn) {
+one_rwlocked_val_read_with(one_rwlocked_val_s * const rwlv, one_locked_val_read_fn fn, void * const arg) {
   int err = 0;
 
   err = pthread_rwlock_rdlock(&(rwlv->lock));
   ERRFATAL(err, "pthread_rwlock_rdlock");
 
   void * val = rwlv->val;
-  fn(val);
+  fn(val, arg);
 
   err = pthread_rwlock_unlock(&(rwlv->lock));
   ERRFATAL(err, "pthread_rwlock_unlock");
@@ -82,14 +82,14 @@ one_rwlocked_val_read_with(one_rwlocked_val_s * const rwlv, one_locked_val_read_
 }
 
 void *
-one_rwlocked_val_with(one_rwlocked_val_s * const rwlv, one_locked_val_fn fn) {
+one_rwlocked_val_with(one_rwlocked_val_s * const rwlv, one_locked_val_fn fn, void * const arg) {
   int err = 0;
 
   err = pthread_rwlock_wrlock(&(rwlv->lock));
   ERRFATAL(err, "pthread_rwlock_wrlock");
 
   void * val = rwlv->val;
-  void * new_val = fn(val);
+  void * new_val = fn(val, arg);
   rwlv->val = new_val;
 
   err = pthread_rwlock_unlock(&(rwlv->lock));

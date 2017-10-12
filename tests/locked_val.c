@@ -48,7 +48,7 @@ test_locked_val_set() {
 }
 
 static void *
-with_locked_val(unused void * val) {
+with_locked_val(unused void * val, unused void * const arg) {
   int * new_val = malloc(sizeof(*new_val));
   NULLFATAL(new_val, "out of memory");
 
@@ -60,7 +60,7 @@ TEST
 test_locked_val_with() {
   char * initial_value = "init";
   one_locked_val_s * lv = one_locked_val_new(initial_value);
-  int * new_val = one_locked_val_with(lv, with_locked_val);
+  int * new_val = one_locked_val_with(lv, with_locked_val, NULL);
   ASSERT_EQ(100, *new_val);
 
   one_locked_val_free(lv);
