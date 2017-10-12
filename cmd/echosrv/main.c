@@ -70,17 +70,17 @@ serve_client(void * arg) {
   one_locked_val_with(ca->locked_vec, push_client_fd, &(ca->fd));
 
   while(true) {
-    n = read(ca->fd, buf, sizeof(buf));
+    n = recv(ca->fd, buf, sizeof(buf), 0);
     if(n <= 0) {
       if(n < 0) {
-        printf("%d: read failed: %s\n", ca->fd, strerror(errno));
+        printf("%d: recv failed: %s\n", ca->fd, strerror(errno));
       }
       break;
     }
 
     n = send(ca->fd, buf, n, flags);
     if(n < 0) {
-      printf("%d: write failed: %s\n", ca->fd, strerror(errno));
+      printf("%d: send failed: %s\n", ca->fd, strerror(errno));
       break;
     }
   }
