@@ -42,13 +42,13 @@ static void *
 spawn_thunk(void * arg) {
   spawn_s *spawn = arg;
   if(spawn) {
-    one_wait_group_s *wg = spawn->wg;
+    one_wait_group_s * wg = spawn->wg;
     spawn->fn(spawn->arg);
-    free(spawn);
 
     if(wg) {
       one_wait_group_done(wg);
     }
+    free(spawn);
   }
   return NULL;
 }

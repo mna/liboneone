@@ -60,18 +60,29 @@ serve_client(void * arg) {
   char buf[100];
   int n = 1;
 
+#if !defined(__APPLE__)
+  int flags = MSG_NOSIGNAL;
+#else
+  int flags = 0;
+#endif
+
   printf("serving %d\n", ca->fd);
   one_locked_val_with(ca->locked_vec, push_client_fd, &(ca->fd));
 
   while(true) {
     n = read(ca->fd, buf, sizeof(buf));
-    NEGFATAL(n, "read");
-    if(n == 0) {
+    if(n <= 0) {
+      if(n < 0) {
+        printf("%d: read failed: %s\n", ca->fd, strerror(errno));
+      }
       break;
     }
 
-    n = write(ca->fd, buf, n);
-    NEGFATAL(n, "write");
+    n = send(ca->fd, buf, n, flags);
+    if(n < 0) {
+      printf("%d: write failed: %s\n", ca->fd, strerror(errno));
+      break;
+    }
   }
 
   printf("closing %d\n", ca->fd);
@@ -97,19 +108,28 @@ int
 main(unused int argc, unused char ** argv) {
   register_signal_handlers();
 
-  int reuse_addr_val = 1;
-  socket99_sockopt opt = {
+  int opt_on = 1;
+  socket99_sockopt opt_addr = {
     .option_id = SO_REUSEADDR,
-    .value = &reuse_addr_val,
-    .value_len = sizeof(reuse_addr_val),
+    .value = &opt_on,
+    .value_len = sizeof(opt_on),
   };
 
   socket99_config cfg = {
     .host = "127.0.0.1",
     .port = 8080,
     .server = true,
-    .sockopts[0] = opt,
   };
+  cfg.sockopts[0] = opt_addr;
+
+#if defined(__APPLE__)
+  socket99_sockopt opt_pipe = {
+    .option_id = SO_NOSIGPIPE,
+    .value = &opt_on,
+    .value_len = sizeof(opt_on),
+  };
+  cfg.sockopts[1] = opt_pipe;
+#endif
 
   socket99_result res;
   bool ok = socket99_open(&cfg, &res);
@@ -119,10 +139,10 @@ main(unused int argc, unused char ** argv) {
     FATAL(buf);
   }
 
-  vec_int_t vec;
-  vec_init(&vec);
+  vec_int_t * vec = malloc(sizeof(*vec));
+  vec_init(vec);
 
-  one_locked_val_s * locked_vec = one_locked_val_new(&vec);
+  one_locked_val_s * locked_vec = one_locked_val_new(vec);
   one_wait_group_s * wg = one_wait_group_new(0);
 
   while(!stop_server) {
@@ -148,6 +168,7 @@ main(unused int argc, unused char ** argv) {
   one_wait_group_wait(wg);
   one_wait_group_free(wg);
   one_locked_val_free(locked_vec);
-  vec_deinit(&vec);
+  vec_deinit(vec);
+  free(vec);
 }
 
