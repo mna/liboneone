@@ -1,29 +1,26 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#include "oneone.h"
 #include "errors.h"
-#include "config.h"
+#include "oneone.h"
 
-one_version_s
-one_version() {
-  return (one_version_s) {
-    .major = oneone_VERSION_MAJOR,
-    .minor = oneone_VERSION_MINOR,
-    .patch = oneone_VERSION_PATCH,
+one_version_s one_version() {
+  return (one_version_s){
+      .major = oneone_VERSION_MAJOR,
+      .minor = oneone_VERSION_MINOR,
+      .patch = oneone_VERSION_PATCH,
   };
 }
 
-static size_t
-get_default_stack_size() {
+static size_t get_default_stack_size() {
   static size_t default_stack_size;
-  if(default_stack_size) {
+  if (default_stack_size) {
     return default_stack_size;
   }
 
-  size_t page_size = 1024 * 8; // default page size to 8KB
+  size_t page_size = 1024 * 8;  // default page size to 8KB
   long sz = sysconf(_SC_PAGESIZE);
-  if(sz) {
+  if (sz) {
     page_size = (size_t)sz;
   }
 
@@ -33,19 +30,18 @@ get_default_stack_size() {
 }
 
 typedef struct spawn_s {
-  void (*fn) (void *);
-  void * arg;
-  one_wait_group_s *wg;
+  void (*fn)(void*);
+  void* arg;
+  one_wait_group_s* wg;
 } spawn_s;
 
-static void *
-spawn_thunk(void * arg) {
-  spawn_s *spawn = arg;
-  if(spawn) {
-    one_wait_group_s * wg = spawn->wg;
+static void* spawn_thunk(void* arg) {
+  spawn_s* spawn = arg;
+  if (spawn) {
+    one_wait_group_s* wg = spawn->wg;
     spawn->fn(spawn->arg);
 
-    if(wg) {
+    if (wg) {
       one_wait_group_done(wg);
     }
     free(spawn);
@@ -53,27 +49,26 @@ spawn_thunk(void * arg) {
   return NULL;
 }
 
-int
-one_spawn(void (*fn) (void *), void * arg) {
+int one_spawn(void (*fn)(void*), void* arg) {
   return one_spawn_wg_ssz(NULL, fn, arg, get_default_stack_size());
 }
 
-int
-one_spawn_wg(one_wait_group_s * const wg, void (*fn) (void *), void * arg) {
+int one_spawn_wg(one_wait_group_s* const wg, void (*fn)(void*), void* arg) {
   return one_spawn_wg_ssz(wg, fn, arg, get_default_stack_size());
 }
 
-int
-one_spawn_ssz(void (*fn) (void *), void * arg, size_t stack_sz) {
+int one_spawn_ssz(void (*fn)(void*), void* arg, size_t stack_sz) {
   return one_spawn_wg_ssz(NULL, fn, arg, stack_sz);
 }
 
-int
-one_spawn_wg_ssz(one_wait_group_s * const wg, void (*fn) (void *), void * arg, size_t stack_sz) {
+int one_spawn_wg_ssz(one_wait_group_s* const wg,
+                     void (*fn)(void*),
+                     void* arg,
+                     size_t stack_sz) {
   pthread_attr_t attr;
   pthread_t t;
   int err = 0;
-  spawn_s * spawn = NULL;
+  spawn_s* spawn = NULL;
 
   // configure the thread's stack size
   err = pthread_attr_init(&attr);
@@ -89,7 +84,7 @@ one_spawn_wg_ssz(one_wait_group_s * const wg, void (*fn) (void *), void * arg, s
   spawn->wg = wg;
 
   // at this point the wait group must be incremented
-  if(wg) {
+  if (wg) {
     one_wait_group_add(wg, 1);
   }
 
@@ -104,12 +99,11 @@ one_spawn_wg_ssz(one_wait_group_s * const wg, void (*fn) (void *), void * arg, s
 
 error2:
   free(spawn);
-  if(wg) {
-    one_wait_group_done(wg); // will not be called by thunk
+  if (wg) {
+    one_wait_group_done(wg);  // will not be called by thunk
   }
 error1:
   pthread_attr_destroy(&attr);
 error0:
   return err;
 }
-

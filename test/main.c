@@ -1,13 +1,12 @@
 #include <stdlib.h>
 
-#include "oneone.h"
-#include "greatest/greatest.h"
+#include "../deps/greatest/greatest.h"
+#include "../src/oneone.h"
 #include "suites.h"
 
 GREATEST_MAIN_DEFS();
 
-int
-main(int argc, char **argv) {
+int main(int argc, char** argv) {
   GREATEST_MAIN_BEGIN();
 
   RUN_SUITE(spawn);
@@ -18,4 +17,3 @@ main(int argc, char **argv) {
 
   GREATEST_MAIN_END();
 }
-
