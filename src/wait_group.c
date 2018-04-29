@@ -1,7 +1,7 @@
 #include <pthread.h>
 
-#include "oneone.h"
 #include "errors.h"
+#include "oneone.h"
 
 typedef struct one_wait_group_s {
   pthread_cond_t cond;
@@ -9,9 +9,8 @@ typedef struct one_wait_group_s {
   int count;
 } one_wait_group_s;
 
-one_wait_group_s *
-one_wait_group_new(int initial_count) {
-  one_wait_group_s * wg = malloc(sizeof(*wg));
+one_wait_group_s* one_wait_group_new(int initial_count) {
+  one_wait_group_s* wg = malloc(sizeof(*wg));
   NULLFATAL(wg, "out of memory");
 
   int err = 0;
@@ -28,9 +27,8 @@ one_wait_group_new(int initial_count) {
   return wg;
 }
 
-void
-one_wait_group_free(one_wait_group_s * const wg) {
-  if(!wg) {
+void one_wait_group_free(one_wait_group_s* const wg) {
+  if (!wg) {
     return;
   }
 
@@ -43,9 +41,8 @@ one_wait_group_free(one_wait_group_s * const wg) {
   free(wg);
 }
 
-void
-one_wait_group_add(one_wait_group_s * const wg, int delta) {
-  if(delta == 0) {
+void one_wait_group_add(one_wait_group_s* const wg, int delta) {
+  if (delta == 0) {
     return;
   }
 
@@ -57,7 +54,7 @@ one_wait_group_add(one_wait_group_s * const wg, int delta) {
   wg->count += delta;
   NEGFATAL(wg->count, "negative wait group count");
 
-  if(wg->count == 0) {
+  if (wg->count == 0) {
     err = pthread_cond_broadcast(&(wg->cond));
     ERRFATAL(err, "pthread_cond_broadcast");
   }
@@ -66,19 +63,17 @@ one_wait_group_add(one_wait_group_s * const wg, int delta) {
   ERRFATAL(err, "pthread_mutex_unlock");
 }
 
-void
-one_wait_group_done(one_wait_group_s * const wg) {
+void one_wait_group_done(one_wait_group_s* const wg) {
   one_wait_group_add(wg, -1);
 }
 
-void
-one_wait_group_wait(one_wait_group_s * const wg) {
+void one_wait_group_wait(one_wait_group_s* const wg) {
   int err = 0;
 
   err = pthread_mutex_lock(&(wg->lock));
   ERRFATAL(err, "pthread_mutex_lock");
 
-  while(wg->count) {
+  while (wg->count) {
     err = pthread_cond_wait(&(wg->cond), &(wg->lock));
     ERRFATAL(err, "pthread_cond_wait");
   }
@@ -86,4 +81,3 @@ one_wait_group_wait(one_wait_group_s * const wg) {
   err = pthread_mutex_unlock(&(wg->lock));
   ERRFATAL(err, "pthread_mutex_unlock");
 }
-

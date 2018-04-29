@@ -2,8 +2,7 @@
 
 // NOTE: clang defines __GNUC__ too.
 #ifdef __GNUC__
-  #define unused __attribute__((unused))
+#define unused __attribute__((unused))
 #else
-  #define unused
+#define unused
 #endif
-

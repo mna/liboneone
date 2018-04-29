@@ -15,6 +15,10 @@
 # make test-race : run tests with thread checks (should not run with RELEASE=1)
 #
 
+# TODO: build shared/static library
+# TODO: defer make targets to build cmd/*
+# TODO: manage object files
+
 # Enable verbose builds with VERBOSE=1.
 V := @
 ifeq ($(VERBOSE),1)
@@ -76,12 +80,6 @@ endif
 # the targets.
 .DEFAULT_GOAL := list
 
-# list: list all available targets.
-# See http://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile.
-.PHONY: list
-list:
-	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
-
 # create build directory
 $(BUILD_DIR):
 	$(V) mkdir -p $@
@@ -110,6 +108,19 @@ test-race: $(BUILD_DIR)/$(TEST_BINARY)
 clean:
 	$(V) -rm -f $(BUILD_DIR)/*
 
+# list: list all available targets.
+# See http://stackoverflow.com/questions/4219255/how-do-you-get-the-list-of-targets-in-a-makefile.
+.PHONY: list
+list:
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
+
+# print all makefile variables, see https://www.cmcrossroads.com/article/dumping-every-makefile-variable
+.PHONY: printvars
+printvars:
+	@$(foreach v,$(sort $(.VARIABLES)), \
+		 $(if $(filter-out environment% default automatic, \
+		 $(origin $v)),$(warning $v=$($v) ($(value $v)))))
+
 # help! remind a little bit how important tasks are done.
 .PHONY: help
 help:
@@ -129,9 +140,3 @@ help:
 	@echo "        installs and fetches the registered submodules (on a fresh clone)."
 	@echo
 
-# print all makefile variables, see https://www.cmcrossroads.com/article/dumping-every-makefile-variable
-.PHONY: printvars
-printvars:
-	@$(foreach v,$(sort $(.VARIABLES)), \
-		 $(if $(filter-out environment% default automatic, \
-		 $(origin $v)),$(warning $v=$($v) ($(value $v)))))
